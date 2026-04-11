@@ -20,6 +20,7 @@ workflows:
       vars:
         BUNDLE_ID:       "com.naturabridge.business"
         VERSION_NUMBER:  "1.0.0"
+        APPLE_TEAM_ID:   "V44J4P68PU"
       node: "20"
       xcode: latest
       cocoapods: "1.15.2"
@@ -76,23 +77,27 @@ workflows:
       # ── Step 5: Generate ExportOptions with correct profile UUID ─────
       - name: Generate ExportOptions
         script: |
-          cat > ios/App/ExportOptions-iOS.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
+          python3 - << PYEOF
+          import os
+          team_id = os.environ['APPLE_TEAM_ID']
+          bundle_id = os.environ['BUNDLE_ID']
+          profile_uuid = os.environ['PROVISIONING_PROFILE_UUID']
+          plist = f"""<?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
               <key>method</key>
               <string>app-store</string>
               <key>teamID</key>
-              <string>${APPLE_TEAM_ID}</string>
+              <string>{team_id}</string>
               <key>signingStyle</key>
               <string>manual</string>
               <key>signingCertificate</key>
               <string>iPhone Distribution</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>${BUNDLE_ID}</key>
-                  <string>${PROVISIONING_PROFILE_UUID}</string>
+                  <key>{bundle_id}</key>
+                  <string>{profile_uuid}</string>
               </dict>
               <key>destination</key>
               <string>export</string>
@@ -103,9 +108,11 @@ workflows:
               <key>stripSwiftSymbols</key>
               <true/>
           </dict>
-          </plist>
-          EOF
-          echo "ExportOptions written with profile: $PROVISIONING_PROFILE_UUID"
+          </plist>"""
+          with open('ios/App/ExportOptions-iOS.plist', 'w') as f:
+              f.write(plist)
+          print(f"ExportOptions written — teamID={team_id}, profile={profile_uuid}")
+          PYEOF
 
       # ── Step 6: Set build number ───────────────────────────────────
       - name: Set build number
@@ -189,6 +196,7 @@ workflows:
       vars:
         BUNDLE_ID:       "com.naturabridge.business"
         VERSION_NUMBER:  "1.0.0"
+        APPLE_TEAM_ID:   "V44J4P68PU"
       node: "20"
       xcode: latest
       cocoapods: "1.15.2"
