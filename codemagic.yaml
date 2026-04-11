@@ -1,0 +1,289 @@
+workflows:
+
+  # ══════════════════════════════════════════════════════════════════
+  # WORKFLOW 1 — NaturaBridgeB iOS (iPhone + iPad) → TestFlight
+  #
+  # No Mac required locally. Codemagic:
+  #   1. Generates the Xcode project via `npx cap add ios`
+  #   2. Installs CocoaPods
+  #   3. Builds + archives for iOS
+  #   4. Uploads IPA to TestFlight automatically
+  # ══════════════════════════════════════════════════════════════════
+  naturabridgeb-ios-testflight:
+    name: "NaturaBridgeB — iPhone + iPad → TestFlight"
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.naturabridge.business
+      vars:
+        BUNDLE_ID:       "com.naturabridge.business"
+        VERSION_NUMBER:  "1.0.0"
+        # ── Add as ENCRYPTED environment variables in Codemagic ─────
+        # APP_STORE_CONNECT_ISSUER_ID
+        # APP_STORE_CONNECT_KEY_ID
+        # APP_STORE_CONNECT_PRIVATE_KEY
+        # APPLE_TEAM_ID
+      node: "20"
+      xcode: "15.4"
+      cocoapods: "1.15.2"
+
+    scripts:
+
+      # ── Step 1: Install Node + Capacitor dependencies ─────────────
+      - name: Install Node dependencies
+        script: |
+          npm ci
+
+      # ── Step 2: Generate the native iOS Xcode project ─────────────
+      # `cap add ios` creates the entire ios/ folder from scratch.
+      # We run this here so you never need a Mac locally.
+      - name: Generate iOS project (cap add ios)
+        script: |
+          npx cap add ios
+          npx cap sync ios
+          echo "✅ Capacitor iOS project generated"
+
+      # ── Step 3: Copy ExportOptions into the generated project ──────
+      # ExportOptions live in build-config/ (committed to git).
+      # We copy them into the generated ios/ folder here.
+      - name: Copy ExportOptions
+        script: |
+          cp build-config/ExportOptions-iOS.plist ios/App/ExportOptions-iOS.plist
+          # Inject the real Team ID from the encrypted environment variable
+          sed -i '' "s/XXXXXXXXXX/$APPLE_TEAM_ID/" ios/App/ExportOptions-iOS.plist
+          echo "✅ ExportOptions-iOS.plist ready (Team ID: $APPLE_TEAM_ID)"
+
+      # ── Step 4: Install CocoaPods ─────────────────────────────────
+      - name: Install CocoaPods
+        script: |
+          cd ios/App
+          pod install --repo-update
+          echo "✅ CocoaPods installed"
+
+      # ── Step 5: Set build number to Codemagic run number ──────────
+      - name: Set build number
+        script: |
+          cd ios/App
+          agvtool new-version -all $PROJECT_BUILD_NUMBER
+          echo "✅ Build number set to $PROJECT_BUILD_NUMBER"
+
+      # ── Step 6: Build and archive for iOS ─────────────────────────
+      - name: Build iOS archive
+        script: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath "$CM_BUILD_DIR/build/NaturaBridgeB-iOS.xcarchive" \
+            -destination "generic/platform=iOS" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $(echo $CM_KEYCHAIN_PATH)" \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_SPECIFIER" \
+            CODE_SIGN_IDENTITY="$CODE_SIGNING_IDENTITY" \
+            archive | xcpretty
+
+      # ── Step 7: Export to IPA ──────────────────────────────────────
+      - name: Export IPA
+        script: |
+          xcodebuild -exportArchive \
+            -archivePath "$CM_BUILD_DIR/build/NaturaBridgeB-iOS.xcarchive" \
+            -exportOptionsPlist ios/App/ExportOptions-iOS.plist \
+            -exportPath "$CM_BUILD_DIR/build/ipa-ios"
+          echo "✅ IPA exported"
+
+      # ── Step 8: Upload to TestFlight ───────────────────────────────
+      - name: Upload to TestFlight
+        script: |
+          APP_FILE=$(find "$CM_BUILD_DIR/build/ipa-ios" -name "*.ipa" | head -1)
+          echo "Uploading: $APP_FILE"
+          xcrun altool --upload-app \
+            --file "$APP_FILE" \
+            --type ios \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --show-progress
+
+    artifacts:
+      - $CM_BUILD_DIR/build/ipa-ios/*.ipa
+      - $CM_BUILD_DIR/build/NaturaBridgeB-iOS.xcarchive
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - admin@alphainception.com   # ← Change to your email
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        beta_groups:
+          - "Internal Testers"
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # WORKFLOW 2 — NaturaBridgeB macOS (Mac Catalyst) → TestFlight
+  #
+  # Same source code as iOS. Extra step: a Ruby script enables
+  # Mac Catalyst in the Xcode project file — no Xcode GUI needed.
+  # ══════════════════════════════════════════════════════════════════
+  naturabridgeb-macos-testflight:
+    name: "NaturaBridgeB — Mac → TestFlight"
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.naturabridge.business
+      vars:
+        BUNDLE_ID:       "com.naturabridge.business"
+        VERSION_NUMBER:  "1.0.0"
+        # Same encrypted vars as the iOS workflow
+      node: "20"
+      xcode: "15.4"
+      cocoapods: "1.15.2"
+
+    scripts:
+
+      # ── Step 1: Install Node + Capacitor dependencies ─────────────
+      - name: Install Node dependencies
+        script: |
+          npm ci
+
+      # ── Step 2: Generate the native iOS Xcode project ─────────────
+      - name: Generate iOS project (cap add ios)
+        script: |
+          npx cap add ios
+          npx cap sync ios
+          echo "✅ Capacitor iOS project generated"
+
+      # ── Step 3: Enable Mac Catalyst — NO XCODE GUI NEEDED ─────────
+      # The xcodeproj Ruby gem (pre-installed on Codemagic Macs) lets
+      # us edit the Xcode project file programmatically.
+      # This is exactly what Xcode does when you tick the Mac checkbox.
+      - name: Enable Mac Catalyst in Xcode project
+        script: |
+          gem install xcodeproj --quiet
+          ruby << 'RUBY'
+            require 'xcodeproj'
+
+            project_path = 'ios/App/App.xcodeproj'
+            project = Xcodeproj::Project.open(project_path)
+
+            project.targets.each do |target|
+              next unless target.name == 'App'
+              puts "Configuring target: #{target.name}"
+
+              target.build_configurations.each do |config|
+                puts "  → #{config.name}: enabling Mac Catalyst"
+                config.build_settings['SUPPORTS_MACCATALYST']                    = 'YES'
+                config.build_settings['DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER'] = 'NO'
+                config.build_settings['MACCATALYST_APPLICATION_IDENTIFIER']      = 'com.naturabridge.business'
+                # Minimum macOS version for Mac Catalyst
+                config.build_settings['MACOSX_DEPLOYMENT_TARGET']               = '13.0'
+              end
+            end
+
+            project.save
+            puts "✅ Mac Catalyst enabled — no Xcode GUI required"
+          RUBY
+
+      # ── Step 4: Copy ExportOptions into the generated project ──────
+      - name: Copy ExportOptions
+        script: |
+          cp build-config/ExportOptions-macOS.plist ios/App/ExportOptions-macOS.plist
+          sed -i '' "s/XXXXXXXXXX/$APPLE_TEAM_ID/" ios/App/ExportOptions-macOS.plist
+          echo "✅ ExportOptions-macOS.plist ready (Team ID: $APPLE_TEAM_ID)"
+
+      # ── Step 5: Install CocoaPods ─────────────────────────────────
+      - name: Install CocoaPods
+        script: |
+          cd ios/App
+          pod install --repo-update
+          echo "✅ CocoaPods installed"
+
+      # ── Step 6: Set build number ───────────────────────────────────
+      - name: Set build number
+        script: |
+          cd ios/App
+          agvtool new-version -all $PROJECT_BUILD_NUMBER
+
+      # ── Step 7: Build and archive for Mac Catalyst ─────────────────
+      # The ONLY difference from the iOS workflow is the -destination flag
+      - name: Build macOS archive (Mac Catalyst)
+        script: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath "$CM_BUILD_DIR/build/NaturaBridgeB-macOS.xcarchive" \
+            -destination "platform=macOS,variant=Mac Catalyst" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $(echo $CM_KEYCHAIN_PATH)" \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_SPECIFIER" \
+            CODE_SIGN_IDENTITY="$CODE_SIGNING_IDENTITY" \
+            archive | xcpretty
+
+      # ── Step 8: Export macOS app ───────────────────────────────────
+      - name: Export macOS app
+        script: |
+          xcodebuild -exportArchive \
+            -archivePath "$CM_BUILD_DIR/build/NaturaBridgeB-macOS.xcarchive" \
+            -exportOptionsPlist ios/App/ExportOptions-macOS.plist \
+            -exportPath "$CM_BUILD_DIR/build/pkg-macos"
+          echo "✅ macOS app exported"
+
+      # ── Step 9: Upload to TestFlight ───────────────────────────────
+      - name: Upload macOS build to TestFlight
+        script: |
+          APP_FILE=$(find "$CM_BUILD_DIR/build/pkg-macos" \( -name "*.pkg" -o -name "*.app" \) | head -1)
+          echo "Uploading macOS build: $APP_FILE"
+          xcrun altool --upload-app \
+            --file "$APP_FILE" \
+            --type osx \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --show-progress
+
+    artifacts:
+      - $CM_BUILD_DIR/build/pkg-macos/**
+      - $CM_BUILD_DIR/build/NaturaBridgeB-macOS.xcarchive
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - admin@alphainception.com   # ← Change to your email
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        beta_groups:
+          - "Internal Testers"

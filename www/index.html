@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0D1B2A">
+<title>NaturaBridgeB</title>
+<style>
+/* ─── Design Tokens ─────────────────────────────────────── */
+:root {
+  --bg:        #0D1B2A;
+  --bg-card:   #1A2F47;
+  --bg-input:  #152334;
+  --border:    #2A3E55;
+  --accent:    #4FACDE;
+  --accent-dim:rgba(79,172,222,0.12);
+  --txt:       #E8E8F0;
+  --txt-muted: #6E8FA8;
+  --txt-dim:   #B8D4EA;
+  --red:       #E74C3C;
+  --green:     #2ECC71;
+  --gold:      #F5A623;
+  --header-h:  56px;
+  --tab-h:     82px;
+}
+
+/* ─── Reset ─────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;height:100dvh}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
+  background:var(--bg);color:var(--txt);
+  overscroll-behavior:none;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ─── Top Header ─────────────────────────────────────────── */
+.app-header{
+  position:fixed;top:0;left:0;right:0;
+  height:calc(var(--header-h) + env(safe-area-inset-top));
+  padding-top:env(safe-area-inset-top);
+  background:rgba(13,27,42,0.96);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding-left:16px;padding-right:16px;
+  z-index:200;
+}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{
+  width:30px;height:30px;
+  background:linear-gradient(135deg,#4FACDE 0%,#1A6FA0 100%);
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;flex-shrink:0;
+}
+.logo-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.logo-name sup{font-size:9px;color:var(--accent);letter-spacing:0;font-weight:600;vertical-align:super}
+.header-right{display:flex;align-items:center;gap:10px}
+.company-chip{
+  font-size:12px;color:var(--txt-muted);
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:20px;padding:4px 10px;
+  max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.credits-chip{
+  font-size:12px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:20px;padding:4px 10px;
+  display:flex;align-items:center;gap:5px;
+  color:var(--txt-muted);
+  flex-shrink:0;
+}
+.credits-chip .num{color:var(--accent);font-weight:700}
+
+/* ─── Content Scroll Area ───────────────────────────────── */
+.app-body{
+  position:fixed;
+  top:calc(var(--header-h) + env(safe-area-inset-top));
+  bottom:calc(var(--tab-h) + env(safe-area-inset-bottom));
+  left:0;right:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+}
+
+/* ─── Screens ───────────────────────────────────────────── */
+.screen{display:none;padding:20px 16px 24px;animation:fadeUp .2s ease both}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* iPad centering */
+/* ─── iPad ──────────────────────────────────────────────── */
+@media(min-width:744px){
+  .screen{max-width:620px;margin:0 auto}
+  .tab-bar{max-width:620px;left:50%;transform:translateX(-50%);
+           border-left:1px solid var(--border);border-right:1px solid var(--border)}
+}
+
+/* ─── Mac Catalyst / large desktop window ───────────────── */
+@media(min-width:1080px){
+  /* Wider content column */
+  .screen{max-width:860px;padding:28px 32px 32px}
+
+  /* Tab bar becomes a wider centred strip on Mac */
+  .tab-bar{
+    max-width:860px;left:50%;transform:translateX(-50%);
+    border-left:1px solid var(--border);border-right:1px solid var(--border);
+    border-radius:0;
+  }
+
+  /* 4-column metric grid on Mac */
+  .metric-grid{grid-template-columns:repeat(4,1fr)}
+
+  /* Two-column layout for Generate form on Mac */
+  .mac-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+
+  /* Larger typography */
+  .screen-title{font-size:28px}
+  .btn-run{font-size:16px;padding:15px}
+
+  /* Ingredient cards: two columns on Mac */
+  .ing-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  /* Wider chart */
+  .chart-box svg{height:180px}
+}
+
+/* ─── Mouse hover states (Mac + iPad with trackpad) ─────── */
+@media(hover:hover){
+  .tab:hover .tl{color:var(--accent);opacity:.8}
+  .btn-run:hover{opacity:.9;box-shadow:0 8px 30px rgba(79,172,222,.4)}
+  .btn-outline:hover{background:var(--accent-dim);border-color:var(--accent)}
+  .btn-add:hover{border-color:var(--accent);background:var(--accent-dim)}
+  .hist-item:hover{border-color:var(--accent);background:rgba(79,172,222,.04)}
+  .pill:hover{background:rgba(79,172,222,.2)}
+  .ing-card:hover{border-color:rgba(79,172,222,.4)}
+  .section-card:hover{border-color:rgba(255,255,255,.08)}
+}
+
+/* ─── Typography helpers ────────────────────────────────── */
+.screen-title{font-size:24px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-0.4px}
+.screen-sub{font-size:14px;color:var(--txt-muted);margin-bottom:22px;line-height:1.5}
+.label{
+  display:block;
+  font-size:11px;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--txt-muted);margin-bottom:7px;
+}
+
+/* ─── Form Inputs ───────────────────────────────────────── */
+.form-group{margin-bottom:18px}
+.input{
+  width:100%;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:12px;padding:14px 15px;
+  font-size:16px;color:var(--txt);
+  outline:none;-webkit-appearance:none;
+  transition:border-color .18s;
+}
+.input:focus{border-color:var(--accent)}
+.input::placeholder{color:var(--txt-muted);opacity:.65}
+
+/* ─── Target Pills ──────────────────────────────────────── */
+.pill-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.pill{
+  background:var(--accent-dim);border:1px solid rgba(79,172,222,.28);
+  border-radius:20px;padding:6px 12px;
+  font-size:13px;color:var(--accent);cursor:pointer;
+  transition:background .15s,color .15s;
+  -webkit-user-select:none;user-select:none;
+}
+.pill.on{background:var(--accent);color:#0D1B2A;font-weight:600;border-color:var(--accent)}
+
+/* ─── Ingredient Cards ──────────────────────────────────── */
+.ing-list{display:flex;flex-direction:column;gap:11px;margin-bottom:13px}
+.ing-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;padding:13px 13px 11px;
+  position:relative;
+}
+.ing-num{
+  position:absolute;top:13px;left:13px;
+  width:20px;height:20px;
+  background:rgba(79,172,222,.15);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--accent);
+}
+.ing-card .remove{
+  position:absolute;top:9px;right:9px;
+  width:30px;height:30px;
+  background:rgba(231,76,60,.12);border:none;border-radius:50%;
+  color:var(--red);font-size:20px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.ing-top{display:grid;grid-template-columns:1fr 82px;gap:8px;margin-bottom:8px;padding-left:28px;padding-right:36px}
+.ing-bot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ing-input{
+  background:rgba(255,255,255,.045);
+  border:1px solid var(--border);border-radius:9px;
+  padding:10px 11px;font-size:15px;color:var(--txt);
+  outline:none;width:100%;-webkit-appearance:none;
+  transition:border-color .15s;
+}
+.ing-input:focus{border-color:var(--accent)}
+.ing-input::placeholder{color:var(--txt-muted);opacity:.6}
+.ing-select{
+  background:var(--bg-input);
+  border:1px solid var(--border);border-radius:9px;
+  padding:10px 28px 10px 11px;font-size:14px;color:var(--txt);
+  outline:none;width:100%;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236E8FA8'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  transition:border-color .15s;
+}
+.ing-select:focus{border-color:var(--accent)}
+
+/* ─── Buttons ───────────────────────────────────────────── */
+.btn-add{
+  width:100%;background:transparent;
+  border:1.5px dashed var(--border);border-radius:13px;
+  padding:13px;font-size:15px;color:var(--accent);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  margin-bottom:14px;transition:border-color .15s,background .15s;
+}
+.btn-add:hover{border-color:var(--accent);background:var(--accent-dim)}
+.btn-run{
+  width:100%;
+  background:linear-gradient(135deg,#4FACDE,#2172a8);
+  border:none;border-radius:14px;padding:16px;
+  font-size:17px;font-weight:700;color:#fff;cursor:pointer;
+  letter-spacing:.2px;
+  box-shadow:0 6px 24px rgba(79,172,222,.3);
+  transition:opacity .15s,transform .1s;
+}
+.btn-run:active{opacity:.85;transform:scale(.99)}
+.btn-outline{
+  width:100%;background:var(--bg-card);border:1px solid var(--border);
+  border-radius:13px;padding:14px;font-size:15px;font-weight:600;
+  color:var(--accent);cursor:pointer;transition:opacity .15s;
+}
+
+/* ─── Results Back Bar ──────────────────────────────────── */
+.back-bar{display:flex;align-items:center;gap:6px;margin-bottom:16px}
+.back-btn{
+  background:none;border:none;color:var(--accent);
+  font-size:15px;cursor:pointer;padding:4px 0;
+  display:flex;align-items:center;gap:4px;
+}
+
+/* ─── Result Header Card ────────────────────────────────── */
+.result-hdr{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:15px;padding:15px 16px;margin-bottom:15px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+}
+.result-hdr-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:3px}
+.result-hdr-sub{font-size:12px;color:var(--txt-muted);line-height:1.5}
+.nb-badge{font-size:12px;font-weight:700;color:var(--accent);text-align:right;white-space:nowrap}
+.nb-badge span{display:block;font-size:10px;color:var(--txt-muted);font-weight:400}
+
+/* ─── PBPK Chart ────────────────────────────────────────── */
+.chart-box{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:15px;padding:14px 14px 10px;
+  margin-bottom:14px;
+}
+.chart-box-label{
+  font-size:10px;text-transform:uppercase;letter-spacing:1.1px;
+  color:var(--txt-muted);margin-bottom:10px;
+}
+.chart-box svg{width:100%;display:block}
+
+/* ─── Metric Grid ───────────────────────────────────────── */
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media(min-width:480px){.metric-grid{grid-template-columns:1fr 1fr 1fr 1fr}}
+.metric-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:13px;padding:13px 12px;
+}
+.metric-card .m-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--txt-muted);margin-bottom:6px}
+.metric-card .m-val{font-size:22px;font-weight:700;line-height:1;margin-bottom:4px}
+.metric-card .m-sub{font-size:11px;color:var(--txt-muted);line-height:1.3}
+
+/* ─── Analysis Sections ─────────────────────────────────── */
+.section-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:15px;padding:15px;margin-bottom:13px;
+}
+.section-card.warn{border-left:4px solid var(--gold)}
+.section-card.danger{border-left:4px solid var(--red)}
+.section-card.ok{border-left:4px solid var(--green)}
+.sc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}
+.sc-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--txt-muted)}
+.badge{
+  font-size:10px;font-weight:700;padding:3px 8px;
+  border-radius:6px;letter-spacing:.6px;text-transform:uppercase;
+}
+.badge.gold{background:rgba(245,166,35,.14);color:var(--gold)}
+.badge.red{background:rgba(231,76,60,.14);color:var(--red)}
+.badge.green{background:rgba(46,204,113,.14);color:var(--green)}
+.badge.blue{background:rgba(79,172,222,.14);color:var(--accent)}
+
+/* ─── PK Table Rows ─────────────────────────────────────── */
+.pk-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:1px solid rgba(42,62,85,.55);
+}
+.pk-row:last-child{border-bottom:none}
+.pk-ing{font-size:14px;font-weight:600;color:var(--txt)}
+.pk-dose{font-size:12px;color:var(--txt-muted);margin-top:2px}
+.pk-stats{display:flex;gap:14px}
+.pk-stat{text-align:center}
+.pk-stat .v{font-size:14px;font-weight:700}
+.pk-stat .l{font-size:10px;color:var(--txt-muted)}
+
+/* ─── Interaction Rows ──────────────────────────────────── */
+.int-row{padding:9px 0;border-bottom:1px solid rgba(42,62,85,.55)}
+.int-row:last-child{border-bottom:none}
+.int-sev{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:3px}
+.int-name{font-size:13px;font-weight:600;color:var(--txt)}
+.int-note{font-size:11px;color:var(--txt-muted);margin-top:2px;font-style:italic}
+.source-note{font-size:11px;color:var(--txt-muted);margin-top:10px;line-height:1.5}
+
+/* ─── Cardiac Rows ──────────────────────────────────────── */
+.cardiac-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:1px solid rgba(42,62,85,.55);
+}
+.cardiac-row:last-child{border-bottom:none}
+.cardiac-left .name{font-size:14px;font-weight:600}
+.cardiac-left .dose{font-size:11px;color:var(--txt-muted);margin-top:2px}
+.cardiac-right{text-align:right}
+.cardiac-right .risk{font-size:13px;font-weight:700}
+.cardiac-right .margin{font-size:11px;color:var(--txt-muted)}
+
+/* ─── Insight Box ───────────────────────────────────────── */
+.insight-box{
+  background:rgba(10,26,18,.85);border-left:4px solid var(--green);
+  border-radius:0 14px 14px 0;
+  padding:14px 15px;margin-bottom:13px;
+}
+.insight-box h4{
+  font-size:10px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--green);margin-bottom:7px;
+}
+.insight-box p{font-size:13px;color:var(--txt-dim);line-height:1.6}
+
+/* ─── Report Footer ─────────────────────────────────────── */
+.report-footer{
+  text-align:center;font-size:10px;color:var(--txt-muted);
+  padding-top:13px;border-top:1px solid var(--border);line-height:2;
+  margin-bottom:8px;
+}
+
+/* ─── History Items ─────────────────────────────────────── */
+.hist-item{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:13px;padding:14px 15px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;
+  cursor:pointer;transition:border-color .15s;
+}
+.hist-item:active{border-color:var(--accent);opacity:.85}
+.hist-name{font-size:15px;font-weight:600;margin-bottom:4px}
+.hist-meta{font-size:12px;color:var(--txt-muted)}
+.hist-chevron{color:var(--txt-muted);font-size:20px}
+
+/* ─── Profile / Billing ─────────────────────────────────── */
+.list-section{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;margin-bottom:16px;
+}
+.list-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 15px;border-bottom:1px solid var(--border);
+}
+.list-row:last-child{border-bottom:none}
+.list-row .lbl{font-size:15px;color:var(--txt)}
+.list-row .val{font-size:14px;color:var(--txt-muted)}
+.list-row .val.accent{color:var(--accent);font-weight:600}
+.plan-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:13px;padding:14px 15px;margin-bottom:10px;
+}
+.plan-card .plan-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
+.plan-card .plan-desc{font-size:13px;color:var(--txt-muted);line-height:1.6}
+.btn-danger{
+  width:100%;background:transparent;border:1px solid rgba(231,76,60,.35);
+  border-radius:13px;padding:14px;font-size:15px;font-weight:600;
+  color:var(--red);cursor:pointer;margin-top:4px;
+}
+.avatar{
+  width:54px;height:54px;flex-shrink:0;
+  background:linear-gradient(135deg,#4FACDE,#1A6FA0);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:700;color:#fff;
+}
+
+/* ─── Loading Overlay ───────────────────────────────────── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(13,27,42,.94);backdrop-filter:blur(4px);
+  z-index:500;
+  flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+.overlay.show{display:flex}
+.spinner{
+  width:46px;height:46px;
+  border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .75s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ov-title{font-size:17px;font-weight:700;color:#fff}
+.ov-sub{font-size:13px;color:var(--txt-muted);margin-top:-10px}
+.steps{display:flex;flex-direction:column;gap:8px;margin-top:6px;align-items:flex-start}
+.step{font-size:12px;color:var(--txt-muted);display:flex;align-items:center;gap:8px;transition:color .3s}
+.step .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.step.active{color:var(--accent)}
+.step.done{color:var(--green)}
+
+/* ─── Bottom Tab Bar ────────────────────────────────────── */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--tab-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:rgba(13,27,42,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:flex-start;padding-top:8px;
+  z-index:200;
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:4px 0;cursor:pointer;background:none;border:none;color:inherit;
+  -webkit-user-select:none;user-select:none;
+}
+.tab .ti{font-size:24px;line-height:1;transition:transform .15s}
+.tab .tl{font-size:10px;color:var(--txt-muted);transition:color .15s}
+.tab.active .tl{color:var(--accent)}
+.tab.active .ti{transform:scale(1.08)}
+
+/* ─── Utility ───────────────────────────────────────────── */
+.red{color:var(--red)} .green{color:var(--green)} .gold{color:var(--gold)} .accent{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP HEADER ═══════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="logo">
+    <div class="logo-mark">🌿</div>
+    <div class="logo-name">NaturaBridgeB<sup>™</sup></div>
+  </div>
+  <div class="header-right">
+    <div class="credits-chip">⚡ <span class="num" id="hdr-credits">3</span> credits</div>
+    <div class="company-chip" id="hdr-company">Alpha Inception</div>
+  </div>
+</header>
+
+<!-- ═══ SCROLL BODY ══════════════════════════════════════════════ -->
+<div class="app-body" id="app-body">
+
+  <!-- ── GENERATE SCREEN ──────────────────────────────────────── -->
+  <div class="screen active" id="s-generate">
+    <div class="screen-title">Generate Report</div>
+    <div class="screen-sub">Enter your formula to run a full PBPK + safety analysis.</div>
+
+    <div class="form-group">
+      <label class="label">Formula Name</label>
+      <input class="input" id="f-name" type="text"
+        placeholder="e.g. Drip Check Electrolyte Chewable">
+    </div>
+
+    <div class="form-group">
+      <label class="label">Target Window</label>
+      <div class="pill-row" id="pill-row">
+        <div class="pill on"  onclick="setPill(this)">General</div>
+        <div class="pill"     onclick="setPill(this)">Cognitive</div>
+        <div class="pill"     onclick="setPill(this)">Athletic</div>
+        <div class="pill"     onclick="setPill(this)">Sleep</div>
+        <div class="pill"     onclick="setPill(this)">Immune</div>
+        <div class="pill"     onclick="setPill(this)">Metabolic</div>
+        <div class="pill"     onclick="setPill(this)">Digestive</div>
+      </div>
+    </div>
+
+    <label class="label">Ingredients</label>
+    <div class="ing-list" id="ing-list"></div>
+
+    <button class="btn-add" onclick="addIng()">
+      <span style="font-size:20px;line-height:1">+</span> Add Ingredient
+    </button>
+
+    <button class="btn-run" onclick="runAnalysis()">
+      🔬&nbsp; Run PBPK Analysis
+    </button>
+
+    <div style="font-size:11px;color:var(--txt-muted);text-align:center;margin-top:12px;line-height:1.6">
+      Each analysis uses 1 credit &nbsp;·&nbsp; Results delivered in ~15 s
+    </div>
+  </div>
+
+  <!-- ── RESULTS SCREEN ───────────────────────────────────────── -->
+  <div class="screen" id="s-results">
+    <div class="back-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
+          <path d="M7 1L1 6.5L7 12" stroke="#4FACDE" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Back
+      </button>
+    </div>
+
+    <!-- Report header -->
+    <div class="result-hdr">
+      <div>
+        <div class="result-hdr-title" id="r-title">Formula</div>
+        <div class="result-hdr-sub">
+          <span id="r-target">General</span>
+          &nbsp;·&nbsp; <span id="r-date"></span>
+        </div>
+      </div>
+      <div class="nb-badge">
+        <span>Powered by</span>
+        NaturaBridgeB™
+      </div>
+    </div>
+
+    <!-- PBPK Chart -->
+    <div class="chart-box">
+      <div class="chart-box-label">PBPK Plasma Concentration — Time Curve</div>
+      <svg viewBox="0 0 340 145" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#E74C3C" stop-opacity=".28"/>
+            <stop offset="100%" stop-color="#E74C3C" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="gB" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4FACDE" stop-opacity=".28"/>
+            <stop offset="100%" stop-color="#4FACDE" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="gC" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2ECC71" stop-opacity=".28"/>
+            <stop offset="100%" stop-color="#2ECC71" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="gD" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#F5A623" stop-opacity=".28"/>
+            <stop offset="100%" stop-color="#F5A623" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- Grid -->
+        <line x1="0" y1="122" x2="340" y2="122" stroke="#2A3E55" stroke-width=".6"/>
+        <line x1="0" y1="88"  x2="340" y2="88"  stroke="#2A3E55" stroke-width=".4" stroke-dasharray="4,4"/>
+        <line x1="0" y1="54"  x2="340" y2="54"  stroke="#2A3E55" stroke-width=".4" stroke-dasharray="4,4"/>
+        <line x1="0" y1="20"  x2="340" y2="20"  stroke="#2A3E55" stroke-width=".4" stroke-dasharray="4,4"/>
+        <!-- Curcumin — very low bioavail, tiny curve -->
+        <path d="M0,122 C25,121 45,112 62,115 C85,118 130,121 200,122 C260,122 310,122 340,122"
+              fill="url(#gA)" stroke="#E74C3C" stroke-width="1.5"/>
+        <!-- Berberine HCl — moderate -->
+        <path d="M0,122 C18,115 42,82 72,72 C105,62 145,78 200,96 C245,109 295,118 340,121"
+              fill="url(#gB)" stroke="#4FACDE" stroke-width="1.5"/>
+        <!-- Piperine — high bioavail, sharp peak -->
+        <path d="M0,122 C14,105 30,38 52,22 C72,8 100,30 140,62 C180,90 230,110 340,120"
+              fill="url(#gC)" stroke="#2ECC71" stroke-width="1.5"/>
+        <!-- St John's Wort — middle -->
+        <path d="M0,122 C20,116 50,92 80,82 C115,70 150,85 200,103 C240,116 300,121 340,122"
+              fill="url(#gD)" stroke="#F5A623" stroke-width="1.5"/>
+        <!-- X-axis labels -->
+        <text x="2"   y="134" font-size="8" fill="#6E8FA8">0h</text>
+        <text x="78"  y="134" font-size="8" fill="#6E8FA8">2h</text>
+        <text x="163" y="134" font-size="8" fill="#6E8FA8">4h</text>
+        <text x="246" y="134" font-size="8" fill="#6E8FA8">6h</text>
+        <text x="325" y="134" font-size="8" fill="#6E8FA8">8h</text>
+        <!-- Legend -->
+        <rect x="2"   y="3" width="9" height="9" rx="2" fill="#2ECC71"/>
+        <text x="14"  y="11" font-size="8" fill="#E8E8F0">Piperine</text>
+        <rect x="73"  y="3" width="9" height="9" rx="2" fill="#4FACDE"/>
+        <text x="85"  y="11" font-size="8" fill="#E8E8F0">Berberine</text>
+        <rect x="155" y="3" width="9" height="9" rx="2" fill="#F5A623"/>
+        <text x="167" y="11" font-size="8" fill="#E8E8F0">St. John's Wort</text>
+        <rect x="263" y="3" width="9" height="9" rx="2" fill="#E74C3C"/>
+        <text x="275" y="11" font-size="8" fill="#E8E8F0">Curcumin</text>
+      </svg>
+    </div>
+
+    <!-- Key metrics -->
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="m-label">Bottleneck</div>
+        <div class="m-val red" style="font-size:16px">Curcumin</div>
+        <div class="m-sub">1% oral bioavail.</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">Interactions</div>
+        <div class="m-val gold">11</div>
+        <div class="m-sub">found · top: MAJOR</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">Cardiac Risk</div>
+        <div class="m-val red">HIGH</div>
+        <div class="m-sub">2 of 5 rated</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">Ingredients</div>
+        <div class="m-val" style="color:#fff" id="r-ing-count">5</div>
+        <div class="m-sub">analysed</div>
+      </div>
+    </div>
+
+    <!-- Ingredient PK Summary -->
+    <div class="section-card">
+      <div class="sc-header">
+        <div class="sc-title">Ingredient PK Summary</div>
+        <div style="font-size:11px;color:var(--txt-muted)">Tmax &nbsp;·&nbsp; foral</div>
+      </div>
+      <div class="pk-row">
+        <div><div class="pk-ing">Curcumin</div><div class="pk-dose">500 mg</div></div>
+        <div class="pk-stats">
+          <div class="pk-stat"><div class="v accent">1.45h</div><div class="l">Tmax</div></div>
+          <div class="pk-stat"><div class="v red">1%</div><div class="l">foral</div></div>
+        </div>
+      </div>
+      <div class="pk-row">
+        <div><div class="pk-ing">Piperine</div><div class="pk-dose">5 mg</div></div>
+        <div class="pk-stats">
+          <div class="pk-stat"><div class="v accent">1.14h</div><div class="l">Tmax</div></div>
+          <div class="pk-stat"><div class="v green">55%</div><div class="l">foral</div></div>
+        </div>
+      </div>
+      <div class="pk-row">
+        <div><div class="pk-ing">Berberine HCl</div><div class="pk-dose">500 mg</div></div>
+        <div class="pk-stats">
+          <div class="pk-stat"><div class="v gold">2.87h</div><div class="l">Tmax</div></div>
+          <div class="pk-stat"><div class="v red">5%</div><div class="l">foral</div></div>
+        </div>
+      </div>
+      <div class="pk-row">
+        <div><div class="pk-ing">St. John's Wort</div><div class="pk-dose">300 mg</div></div>
+        <div class="pk-stats">
+          <div class="pk-stat"><div class="v gold">2.31h</div><div class="l">Tmax</div></div>
+          <div class="pk-stat"><div class="v gold">20%</div><div class="l">foral</div></div>
+        </div>
+      </div>
+      <div class="pk-row">
+        <div><div class="pk-ing">Omega-3 EPA/DHA</div><div class="pk-dose">1000 mg</div></div>
+        <div class="pk-stats">
+          <div class="pk-stat"><div class="v gold">4.36h</div><div class="l">Tmax</div></div>
+          <div class="pk-stat"><div class="v green">95%</div><div class="l">foral</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Herb-Drug Interactions -->
+    <div class="section-card warn">
+      <div class="sc-header">
+        <div class="sc-title">Herb-Drug Interaction Screen</div>
+        <div class="badge gold">MAJOR</div>
+      </div>
+      <div style="font-size:12px;color:var(--txt-muted);margin-bottom:10px">
+        11 interactions found &nbsp;·&nbsp; showing top 5
+      </div>
+      <div class="int-row">
+        <div class="int-sev gold">MAJOR</div>
+        <div class="int-name">Turmeric + Warfarin</div>
+        <div class="int-note">Inhibits platelet aggregation &amp; COX-2 · Increased bleeding risk</div>
+      </div>
+      <div class="int-row">
+        <div class="int-sev gold">MAJOR</div>
+        <div class="int-name">Turmeric + Tacrolimus</div>
+        <div class="int-note">CYP3A4 inhibition raises tacrolimus levels · nephrotoxicity risk</div>
+      </div>
+      <div class="int-row">
+        <div class="int-sev gold">MAJOR</div>
+        <div class="int-name">Goldenseal + CYP3A4 substrates</div>
+        <div class="int-note">Berberine is a potent CYP3A4 inhibitor in vivo · markedly elevated plasma levels</div>
+      </div>
+      <div class="int-row">
+        <div class="int-sev gold">MAJOR</div>
+        <div class="int-name">Goldenseal + Cyclosporine</div>
+        <div class="int-note">P-gp inhibition increases cyclosporine absorption · nephrotoxicity</div>
+      </div>
+      <div class="int-row">
+        <div class="int-sev" style="color:var(--accent)">MODERATE</div>
+        <div class="int-name">Turmeric + Statins</div>
+        <div class="int-note">CYP3A4 inhibition may increase statin levels · myopathy risk</div>
+      </div>
+      <div class="source-note">
+        Source: NaturaBridgeB Herb-Drug RAG — 106 curated interactions across 20 herbs &amp; 26 drug classes.
+      </div>
+    </div>
+
+    <!-- Cardiac Safety -->
+    <div class="section-card danger">
+      <div class="sc-header">
+        <div class="sc-title">12-Organ Safety — Cardiac (hERG)</div>
+        <div class="badge red">HIGH</div>
+      </div>
+      <div style="font-size:12px;color:var(--txt-muted);margin-bottom:10px">
+        2 of 5 ingredients rated
+      </div>
+      <div class="cardiac-row">
+        <div class="cardiac-left">
+          <div class="name">Curcumin</div>
+          <div class="dose">500 mg &nbsp;·&nbsp; hERG IC50: 12.50 µM</div>
+        </div>
+        <div class="cardiac-right">
+          <div class="risk red">HIGH</div>
+          <div class="margin">Margin: 1.74×</div>
+        </div>
+      </div>
+      <div class="cardiac-row">
+        <div class="cardiac-left">
+          <div class="name">Berberine HCl</div>
+          <div class="dose">500 mg &nbsp;·&nbsp; hERG IC50: 0.71 µM</div>
+        </div>
+        <div class="cardiac-right">
+          <div class="risk red">HIGH</div>
+          <div class="margin">Margin: 0.06×</div>
+        </div>
+      </div>
+      <div class="source-note">
+        Safety margin &lt; 30× triggers formal QT study per ICH E14.
+        Compounds rated HIGH should not be formulated without prior cardiac pharmacology review.
+      </div>
+    </div>
+
+    <!-- Actionable Insight -->
+    <div class="insight-box">
+      <h4>Actionable Insight — NaturaBridgeB Recommendation</h4>
+      <p>
+        Run a full Discovery Engine analysis to receive: (1) quantified AUC improvement
+        prediction for each delivery format, (2) synergy opportunities across all ingredient
+        pairs via SynergyForge, (3) microbiome archetype impact assessment, and
+        (4) chronopharmacology timing optimisation via Chrono-Cascade.
+        Contact your NaturaBridgeB representative to unlock the full report.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="report-footer">
+      Report ID: NB-<span id="r-id">------</span><br>
+      PBPK: 1-compartment Bateman + 12-organ safety screen + herb-drug RAG<br>
+      Not a substitute for clinical pharmacokinetic studies
+    </div>
+  </div>
+
+  <!-- ── HISTORY SCREEN ────────────────────────────────────────── -->
+  <div class="screen" id="s-history">
+    <div class="screen-title">History</div>
+    <div class="screen-sub">Your previous formulation analyses.</div>
+
+    <div class="hist-item">
+      <div>
+        <div class="hist-name">Test Multi-Ingredient Formula</div>
+        <div class="hist-meta">5 ingredients &nbsp;·&nbsp; MAJOR interactions &nbsp;·&nbsp; Apr 10, 2026</div>
+      </div>
+      <div class="hist-chevron">›</div>
+    </div>
+    <div class="hist-item">
+      <div>
+        <div class="hist-name">Live VPS Smoke Test – Enhanced</div>
+        <div class="hist-meta">3 ingredients &nbsp;·&nbsp; MAJOR interactions &nbsp;·&nbsp; Apr 10, 2026</div>
+      </div>
+      <div class="hist-chevron">›</div>
+    </div>
+    <div class="hist-item">
+      <div>
+        <div class="hist-name">Drip Check Electrolyte Chewable</div>
+        <div class="hist-meta">4 ingredients &nbsp;·&nbsp; MODERATE interactions &nbsp;·&nbsp; Apr 8, 2026</div>
+      </div>
+      <div class="hist-chevron">›</div>
+    </div>
+    <div class="hist-item">
+      <div>
+        <div class="hist-name">E-Gamer Focus Stack</div>
+        <div class="hist-meta">6 ingredients &nbsp;·&nbsp; MINOR interactions &nbsp;·&nbsp; Apr 6, 2026</div>
+      </div>
+      <div class="hist-chevron">›</div>
+    </div>
+    <div class="hist-item">
+      <div>
+        <div class="hist-name">Damage Control Formula</div>
+        <div class="hist-meta">4 ingredients &nbsp;·&nbsp; MODERATE interactions &nbsp;·&nbsp; Apr 6, 2026</div>
+      </div>
+      <div class="hist-chevron">›</div>
+    </div>
+  </div>
+
+  <!-- ── BILLING SCREEN ────────────────────────────────────────── -->
+  <div class="screen" id="s-billing">
+    <div class="screen-title">Billing</div>
+    <div class="screen-sub">Manage your plan and credit balance.</div>
+
+    <div class="list-section">
+      <div class="list-row">
+        <div class="lbl">Current Plan</div>
+        <div class="val accent">FREE</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Credits Remaining</div>
+        <div class="val accent">3</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Used This Month</div>
+        <div class="val">4 credits</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Next Renewal</div>
+        <div class="val">May 1, 2026</div>
+      </div>
+    </div>
+
+    <button class="btn-run" style="margin-bottom:10px;font-size:15px">⚡&nbsp; Upgrade to Pro — $99/mo</button>
+    <button class="btn-outline" style="margin-bottom:22px">Purchase Credit Pack</button>
+
+    <label class="label" style="margin-bottom:12px">Available Plans</label>
+    <div class="plan-card">
+      <div class="plan-name">Pro — $99 / month</div>
+      <div class="plan-desc">50 reports &nbsp;·&nbsp; Full PBPK &nbsp;·&nbsp; SynergyForge &nbsp;·&nbsp; Chrono-Cascade &nbsp;·&nbsp; API access</div>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">Enterprise — Contact Us</div>
+      <div class="plan-desc">Unlimited reports &nbsp;·&nbsp; White-label &nbsp;·&nbsp; Custom integrations &nbsp;·&nbsp; Dedicated support</div>
+    </div>
+  </div>
+
+  <!-- ── PROFILE SCREEN ────────────────────────────────────────── -->
+  <div class="screen" id="s-profile">
+    <div class="screen-title">Profile</div>
+
+    <div style="display:flex;align-items:center;gap:14px;padding:16px;
+                background:var(--bg-card);border:1px solid var(--border);
+                border-radius:15px;margin-bottom:20px">
+      <div class="avatar">A</div>
+      <div>
+        <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:3px">Alpha Inception Demo Co.</div>
+        <div style="font-size:13px;color:var(--txt-muted)">admin@alphainception.com</div>
+        <div style="font-size:11px;color:var(--accent);margin-top:4px">FREE Plan</div>
+      </div>
+    </div>
+
+    <div class="list-section">
+      <div class="list-row">
+        <div class="lbl">Company</div>
+        <div class="val">Alpha Inception Demo Co.</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Email</div>
+        <div class="val">admin@alphainception.com</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Member Since</div>
+        <div class="val">April 2026</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Account ID</div>
+        <div class="val">NB-AID-00412</div>
+      </div>
+    </div>
+
+    <div class="list-section">
+      <div class="list-row">
+        <div class="lbl">Notifications</div>
+        <div class="val accent">Enabled</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Default Target Window</div>
+        <div class="val">General</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Export Format</div>
+        <div class="val">PDF + HTML</div>
+      </div>
+      <div class="list-row">
+        <div class="lbl">Units</div>
+        <div class="val">mg / µM</div>
+      </div>
+    </div>
+
+    <button class="btn-danger">Sign Out</button>
+  </div>
+
+</div><!-- /app-body -->
+
+<!-- ═══ BOTTOM TAB BAR ═══════════════════════════════════════════ -->
+<nav class="tab-bar">
+  <button class="tab active" onclick="goTab('generate',this)">
+    <span class="ti">🔬</span>
+    <span class="tl">Generate</span>
+  </button>
+  <button class="tab" onclick="goTab('history',this)">
+    <span class="ti">📋</span>
+    <span class="tl">History</span>
+  </button>
+  <button class="tab" onclick="goTab('billing',this)">
+    <span class="ti">💳</span>
+    <span class="tl">Billing</span>
+  </button>
+  <button class="tab" onclick="goTab('profile',this)">
+    <span class="ti">👤</span>
+    <span class="tl">Profile</span>
+  </button>
+</nav>
+
+<!-- ═══ LOADING OVERLAY ══════════════════════════════════════════ -->
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div class="ov-title">Running PBPK Analysis</div>
+  <div class="ov-sub">This takes 15 – 30 seconds</div>
+  <div class="steps" id="steps">
+    <div class="step active" id="st1"><div class="dot"></div>Loading ingredient profiles…</div>
+    <div class="step"        id="st2"><div class="dot"></div>Running Bateman model…</div>
+    <div class="step"        id="st3"><div class="dot"></div>Screening herb-drug interactions…</div>
+    <div class="step"        id="st4"><div class="dot"></div>12-organ cardiac safety screen…</div>
+    <div class="step"        id="st5"><div class="dot"></div>Generating report…</div>
+  </div>
+</div>
+
+<script>
+/* ── Tab navigation ──────────────────────────────────────── */
+function goTab(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('s-' + name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('app-body').scrollTop = 0;
+}
+
+/* ── Back to Generate from Results ───────────────────────── */
+function goBack() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-generate').classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab:first-child').classList.add('active');
+  document.getElementById('app-body').scrollTop = 0;
+}
+
+/* ── Target Window pills ─────────────────────────────────── */
+function setPill(el) {
+  document.querySelectorAll('#pill-row .pill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+}
+
+/* ── Ingredient management ───────────────────────────────── */
+let ingIdx = 0;
+
+function addIng(preset) {
+  ingIdx++;
+  const i = ingIdx;
+  const n = preset?.name  || '';
+  const d = preset?.dose  || '';
+  const f = preset?.form  || 'standard';
+  const lbl = preset?.label || '';
+  const card = document.createElement('div');
+  card.className = 'ing-card';
+  card.id = 'ing' + i;
+  card.innerHTML = `
+    <div class="ing-num">${i}</div>
+    <button class="remove" onclick="removeIng('ing${i}')" aria-label="Remove">×</button>
+    <div class="ing-top">
+      <input class="ing-input" type="text"   placeholder="Ingredient name" value="${n}">
+      <input class="ing-input" type="number" placeholder="mg" value="${d}" style="text-align:center">
+    </div>
+    <div class="ing-bot">
+      <select class="ing-select">
+        <option value="standard"     ${f==='standard'     ?'selected':''}>Standard</option>
+        <option value="liposomal"    ${f==='liposomal'    ?'selected':''}>Liposomal</option>
+        <option value="nanoparticle" ${f==='nanoparticle' ?'selected':''}>Nanoparticle</option>
+        <option value="phospholipid" ${f==='phospholipid' ?'selected':''}>Phospholipid complex</option>
+        <option value="enteric"      ${f==='enteric'      ?'selected':''}>Enteric-coated</option>
+        <option value="sublingual"   ${f==='sublingual'   ?'selected':''}>Sublingual</option>
+      </select>
+      <input class="ing-input" type="text" placeholder="Label (optional)" value="${lbl}">
+    </div>
+  `;
+  document.getElementById('ing-list').appendChild(card);
+}
+
+function removeIng(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+/* ── Run analysis with animated steps ───────────────────── */
+function runAnalysis() {
+  const name   = document.getElementById('f-name').value.trim() || 'My Formula';
+  const target = document.querySelector('#pill-row .pill.on')?.textContent || 'General';
+  const count  = document.getElementById('ing-list').children.length || 5;
+  const ov     = document.getElementById('overlay');
+
+  // Reset steps
+  for (let i = 1; i <= 5; i++) {
+    const s = document.getElementById('st' + i);
+    s.classList.remove('active','done');
+  }
+  document.getElementById('st1').classList.add('active');
+  ov.classList.add('show');
+
+  let cur = 1;
+  const iv = setInterval(() => {
+    document.getElementById('st' + cur).classList.replace('active','done');
+    cur++;
+    if (cur <= 5) {
+      document.getElementById('st' + cur).classList.add('active');
+    } else {
+      clearInterval(iv);
+      setTimeout(() => {
+        document.getElementById('st5').classList.add('done');
+        ov.classList.remove('show');
+
+        // Populate result fields
+        document.getElementById('r-title').textContent  = name;
+        document.getElementById('r-target').textContent = target;
+        document.getElementById('r-ing-count').textContent = count;
+        document.getElementById('r-date').textContent   =
+          new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        document.getElementById('r-id').textContent     =
+          Math.random().toString(36).slice(2,8).toUpperCase();
+
+        // Deduct credit (UI only)
+        const c = document.getElementById('hdr-credits');
+        const n = Math.max(0, parseInt(c.textContent) - 1);
+        c.textContent = n;
+
+        // Show results tab
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('s-results').classList.add('active');
+        document.getElementById('app-body').scrollTop = 0;
+      }, 500);
+    }
+  }, 1100);
+}
+
+/* ── Seed default ingredients (matching the desktop screenshot) */
+[
+  { name:'caffeine',   dose:'200', form:'standard' },
+  { name:'l_theanine', dose:'150', form:'standard' }
+].forEach(p => addIng(p));
+</script>
+</body>
+</html>

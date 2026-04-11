@@ -1,0 +1,39 @@
+{
+  "appId": "com.naturabridge.business",
+  "appName": "NaturaBridgeB",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "allowNavigation": [
+      "*.naturabridge.com"
+    ]
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0D1B2A",
+    "preferredContentMode": "mobile",
+    "scheme": "NaturaBridgeB",
+    "limitsNavigationsToAppBoundDomains": true,
+    "allowsLinkPreview": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#0D1B2A",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true,
+      "iosSpinnerStyle": "small",
+      "spinnerColor": "#4FACDE"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0D1B2A"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK",
+      "resizeOnFullScreen": true
+    }
+  }
+}
