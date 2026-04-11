@@ -21,7 +21,7 @@ workflows:
         BUNDLE_ID:       "com.naturabridge.business"
         VERSION_NUMBER:  "1.0.0"
       node: "20"
-      xcode: "15.4"
+      xcode: latest
       cocoapods: "1.15.2"
 
     scripts:
@@ -161,7 +161,7 @@ workflows:
         BUNDLE_ID:       "com.naturabridge.business"
         VERSION_NUMBER:  "1.0.0"
       node: "20"
-      xcode: "15.4"
+      xcode: latest
       cocoapods: "1.15.2"
 
     scripts:
