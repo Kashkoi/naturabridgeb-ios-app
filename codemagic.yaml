@@ -73,10 +73,39 @@ workflows:
           echo "Certificate: $CERT_NAME"
           echo "Profile UUID: $PROFILE_UUID"
 
-      # ── Step 5: Copy ExportOptions ─────────────────────────────────
-      - name: Copy ExportOptions
+      # ── Step 5: Generate ExportOptions with correct profile UUID ─────
+      - name: Generate ExportOptions
         script: |
-          cp build-config/ExportOptions-iOS.plist ios/App/ExportOptions-iOS.plist
+          cat > ios/App/ExportOptions-iOS.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string>${APPLE_TEAM_ID}</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>signingCertificate</key>
+              <string>iPhone Distribution</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>${BUNDLE_ID}</key>
+                  <string>${PROVISIONING_PROFILE_UUID}</string>
+              </dict>
+              <key>destination</key>
+              <string>export</string>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>stripSwiftSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+          echo "ExportOptions written with profile: $PROVISIONING_PROFILE_UUID"
 
       # ── Step 6: Set build number ───────────────────────────────────
       - name: Set build number
