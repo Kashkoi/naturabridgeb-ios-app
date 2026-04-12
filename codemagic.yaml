@@ -17,6 +17,9 @@ workflows:
           source: true
 
     environment:
+      groups:
+        - app-store-connect
+        - ios-signing
       vars:
         BUNDLE_ID:     "com.naturabridge.business"
         APPLE_TEAM_ID: "V44J4P68PU"
@@ -136,6 +139,9 @@ workflows:
           source: true
 
     environment:
+      groups:
+        - app-store-connect
+        - ios-signing
       vars:
         BUNDLE_ID:     "com.naturabridge.business"
         APPLE_TEAM_ID: "V44J4P68PU"
