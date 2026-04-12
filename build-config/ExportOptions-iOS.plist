@@ -10,7 +10,13 @@
     <string>V44J4P68PU</string>
 
     <key>signingStyle</key>
-    <string>automatic</string>
+    <string>manual</string>
+
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.naturabridge.business</key>
+        <string>NaturaBridgeB_AppStore</string>
+    </dict>
 
     <key>destination</key>
     <string>export</string>
