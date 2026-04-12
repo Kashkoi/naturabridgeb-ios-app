@@ -44,9 +44,7 @@ workflows:
           cd ios/App
           pod install --repo-update
 
-      # ── Step 4: Set up code signing via Codemagic CLI tools ────────
-      # Uses App Store Connect API to create/fetch distribution cert +
-      # provisioning profile. No pre-flight check needed.
+      # ── Step 4: Set up code signing + generate ExportOptions ─────────
       - name: Set up code signing
         script: |
           keychain initialize
@@ -63,56 +61,40 @@ workflows:
 
           keychain add-certificates
 
-          # Export signing identity and profile for xcodebuild
+          # Get cert name and profile UUID while still in this shell scope
           CERT_NAME=$(security find-identity -v -p codesigning | grep "iPhone Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
           PROFILE=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.mobileprovision" | head -1)
           PROFILE_UUID=$(security cms -D -i "$PROFILE" | plutil -extract UUID xml1 -o - - | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
 
-          echo "CODE_SIGNING_IDENTITY=$CERT_NAME" >> $CM_ENV
-          echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> $CM_ENV
-
           echo "Certificate: $CERT_NAME"
           echo "Profile UUID: $PROFILE_UUID"
 
-      # ── Step 5: Generate ExportOptions with correct profile UUID ─────
-      - name: Generate ExportOptions
-        script: |
-          python3 - << PYEOF
-          import os
-          team_id = os.environ['APPLE_TEAM_ID']
-          bundle_id = os.environ['BUNDLE_ID']
-          profile_uuid = os.environ['PROVISIONING_PROFILE_UUID']
-          plist = f"""<?xml version="1.0" encoding="UTF-8"?>
+          # Persist for later steps
+          echo "CODE_SIGNING_IDENTITY=$CERT_NAME" >> "$CM_ENV"
+          echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> "$CM_ENV"
+
+          # Write ExportOptions NOW while PROFILE_UUID is in scope
+          cat > ios/App/ExportOptions-iOS.plist << PLIST_EOF
+          <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>teamID</key>
-              <string>{team_id}</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>signingCertificate</key>
-              <string>iPhone Distribution</string>
+              <key>method</key><string>app-store</string>
+              <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+              <key>signingStyle</key><string>manual</string>
+              <key>signingCertificate</key><string>iPhone Distribution</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>{bundle_id}</key>
-                  <string>{profile_uuid}</string>
+                  <key>${BUNDLE_ID}</key><string>${PROFILE_UUID}</string>
               </dict>
-              <key>destination</key>
-              <string>export</string>
-              <key>uploadSymbols</key>
-              <true/>
-              <key>uploadBitcode</key>
-              <false/>
-              <key>stripSwiftSymbols</key>
-              <true/>
+              <key>destination</key><string>export</string>
+              <key>uploadSymbols</key><true/>
+              <key>uploadBitcode</key><false/>
+              <key>stripSwiftSymbols</key><true/>
           </dict>
-          </plist>"""
-          with open('ios/App/ExportOptions-iOS.plist', 'w') as f:
-              f.write(plist)
-          print(f"ExportOptions written — teamID={team_id}, profile={profile_uuid}")
-          PYEOF
+          </plist>
+          PLIST_EOF
+          echo "ExportOptions written with profile: $PROFILE_UUID"
 
       # ── Step 6: Set build number ───────────────────────────────────
       - name: Set build number
