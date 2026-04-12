@@ -18,36 +18,33 @@ workflows:
 
     environment:
       vars:
-        BUNDLE_ID:       "com.naturabridge.business"
-        VERSION_NUMBER:  "1.0.0"
-        APPLE_TEAM_ID:   "V44J4P68PU"
+        BUNDLE_ID:     "com.naturabridge.business"
+        APPLE_TEAM_ID: "V44J4P68PU"
       node: "20"
       xcode: latest
       cocoapods: "1.15.2"
 
     scripts:
 
-      # ── Step 1: Install Node + Capacitor dependencies ─────────────
       - name: Install Node dependencies
-        script: |
-          npm ci
+        script: npm ci
 
-      # ── Step 2: Generate the native iOS Xcode project ─────────────
-      - name: Generate iOS project (cap add ios)
+      - name: Generate iOS project
         script: |
           npx cap add ios
           npx cap sync ios
 
-      # ── Step 3: Install CocoaPods ─────────────────────────────────
       - name: Install CocoaPods
         script: |
           cd ios/App
           pod install --repo-update
 
-      # ── Step 4: Set up code signing + generate ExportOptions ─────────
       - name: Set up code signing
         script: |
           keychain initialize
+
+          # Write private key to file — avoids multiline env var quoting issues
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
 
           app-store-connect fetch-signing-files \
             --bundle-id "$BUNDLE_ID" \
@@ -55,60 +52,30 @@ workflows:
             --certificate-types IOS_DISTRIBUTION \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --key-id "$APP_STORE_CONNECT_KEY_ID" \
-            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
+            --private-key "@file:/tmp/asc_key.p8" \
             --create \
             --save
 
           keychain add-certificates
 
-          # Show all available signing identities for debugging
-          echo "=== Available signing identities ==="
+          echo "=== Identities after fetch ==="
           security find-identity -v -p codesigning
-          echo "==================================="
+          echo "=============================="
 
-          # Apple's newer certs are "Apple Distribution: ..." — match either
-          CERT_NAME=$(security find-identity -v -p codesigning | \
-            grep -E '"(Apple Distribution|iPhone Distribution):' | head -1 | \
-            sed 's/.*"\(.*\)".*/\1/')
           PROFILE=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.mobileprovision" | head -1)
-          PROFILE_UUID=$(security cms -D -i "$PROFILE" | plutil -extract UUID xml1 -o - - | \
-            sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          PROFILE_UUID=$(security cms -D -i "$PROFILE" | plutil -extract UUID xml1 -o - - | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          CERT_NAME=$(security find-identity -v -p codesigning | grep -v "REVOKED" | grep -oE '"[^"]+"' | head -1 | tr -d '"')
 
-          echo "Certificate: $CERT_NAME"
-          echo "Profile path: $PROFILE"
+          echo "Cert: $CERT_NAME"
           echo "Profile UUID: $PROFILE_UUID"
-
-          # Persist for xcodebuild archive step
           echo "CODE_SIGNING_IDENTITY=$CERT_NAME" >> "$CM_ENV"
           echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> "$CM_ENV"
 
-          # Write ExportOptions with printf — no heredoc to avoid YAML parse issues
-          printf '<?xml version="1.0" encoding="UTF-8"?>\n' > ios/App/ExportOptions-iOS.plist
-          printf '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<plist version="1.0"><dict>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<key>method</key><string>app-store-connect</string>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<key>teamID</key><string>%s</string>\n' "$APPLE_TEAM_ID" >> ios/App/ExportOptions-iOS.plist
-          printf '<key>signingStyle</key><string>manual</string>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<key>signingCertificate</key><string>%s</string>\n' "$CERT_NAME" >> ios/App/ExportOptions-iOS.plist
-          printf '<key>provisioningProfiles</key><dict>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<key>%s</key><string>%s</string>\n' "$BUNDLE_ID" "$PROFILE_UUID" >> ios/App/ExportOptions-iOS.plist
-          printf '</dict>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<key>destination</key><string>export</string>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<key>uploadSymbols</key><true/>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<key>uploadBitcode</key><false/>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '<key>stripSwiftSymbols</key><true/>\n' >> ios/App/ExportOptions-iOS.plist
-          printf '</dict></plist>\n' >> ios/App/ExportOptions-iOS.plist
-
-          echo "ExportOptions written:"
-          cat ios/App/ExportOptions-iOS.plist
-
-      # ── Step 6: Set build number ───────────────────────────────────
       - name: Set build number
         script: |
           cd ios/App
           agvtool new-version -all $PROJECT_BUILD_NUMBER
 
-      # ── Step 7: Build and archive for iOS ─────────────────────────
       - name: Build iOS archive
         script: |
           xcodebuild \
@@ -124,24 +91,12 @@ workflows:
             CODE_SIGN_IDENTITY="$CODE_SIGNING_IDENTITY" \
             archive | xcpretty
 
-      # ── Step 8: Export to IPA ──────────────────────────────────────
       - name: Export IPA
         script: |
           xcodebuild -exportArchive \
             -archivePath "$CM_BUILD_DIR/build/NaturaBridgeB-iOS.xcarchive" \
-            -exportOptionsPlist ios/App/ExportOptions-iOS.plist \
+            -exportOptionsPlist build-config/ExportOptions-iOS.plist \
             -exportPath "$CM_BUILD_DIR/build/ipa-ios"
-
-      # ── Step 9: Upload to TestFlight ───────────────────────────────
-      - name: Upload to TestFlight
-        script: |
-          APP_FILE=$(find "$CM_BUILD_DIR/build/ipa-ios" -name "*.ipa" | head -1)
-          xcrun altool --upload-app \
-            --file "$APP_FILE" \
-            --type ios \
-            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
-            --show-progress
 
     artifacts:
       - $CM_BUILD_DIR/build/ipa-ios/*.ipa
@@ -182,9 +137,8 @@ workflows:
 
     environment:
       vars:
-        BUNDLE_ID:       "com.naturabridge.business"
-        VERSION_NUMBER:  "1.0.0"
-        APPLE_TEAM_ID:   "V44J4P68PU"
+        BUNDLE_ID:     "com.naturabridge.business"
+        APPLE_TEAM_ID: "V44J4P68PU"
       node: "20"
       xcode: latest
       cocoapods: "1.15.2"
@@ -192,15 +146,14 @@ workflows:
     scripts:
 
       - name: Install Node dependencies
-        script: |
-          npm ci
+        script: npm ci
 
-      - name: Generate iOS project (cap add ios)
+      - name: Generate iOS project
         script: |
           npx cap add ios
           npx cap sync ios
 
-      - name: Enable Mac Catalyst in Xcode project
+      - name: Enable Mac Catalyst
         script: |
           gem install xcodeproj --quiet
           ruby << 'RUBY'
@@ -223,33 +176,6 @@ workflows:
           cd ios/App
           pod install --repo-update
 
-      - name: Set up code signing
-        script: |
-          keychain initialize
-
-          app-store-connect fetch-signing-files \
-            --bundle-id "$BUNDLE_ID" \
-            --type MAC_APP_STORE \
-            --certificate-types MAC_APP_DISTRIBUTION \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --key-id "$APP_STORE_CONNECT_KEY_ID" \
-            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
-            --create \
-            --save
-
-          keychain add-certificates
-
-          CERT_NAME=$(security find-identity -v -p codesigning | grep "3rd Party Mac Developer Application" | head -1 | sed 's/.*"\(.*\)".*/\1/')
-          PROFILE=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.provisionprofile" -o -name "*.mobileprovision" | head -1)
-          PROFILE_UUID=$(security cms -D -i "$PROFILE" | plutil -extract UUID xml1 -o - - | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-
-          echo "CODE_SIGNING_IDENTITY=$CERT_NAME" >> $CM_ENV
-          echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> $CM_ENV
-
-      - name: Copy ExportOptions
-        script: |
-          cp build-config/ExportOptions-macOS.plist ios/App/ExportOptions-macOS.plist
-
       - name: Set build number
         script: |
           cd ios/App
@@ -266,7 +192,7 @@ workflows:
             OTHER_CODE_SIGN_FLAGS="--keychain $(echo $CM_KEYCHAIN_PATH)" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE="$PROVISIONING_PROFILE_UUID" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_SPECIFIER" \
             CODE_SIGN_IDENTITY="$CODE_SIGNING_IDENTITY" \
             archive | xcpretty
 
@@ -274,18 +200,8 @@ workflows:
         script: |
           xcodebuild -exportArchive \
             -archivePath "$CM_BUILD_DIR/build/NaturaBridgeB-macOS.xcarchive" \
-            -exportOptionsPlist ios/App/ExportOptions-macOS.plist \
+            -exportOptionsPlist build-config/ExportOptions-macOS.plist \
             -exportPath "$CM_BUILD_DIR/build/pkg-macos"
-
-      - name: Upload macOS build to TestFlight
-        script: |
-          APP_FILE=$(find "$CM_BUILD_DIR/build/pkg-macos" \( -name "*.pkg" -o -name "*.app" \) | head -1)
-          xcrun altool --upload-app \
-            --file "$APP_FILE" \
-            --type osx \
-            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
-            --show-progress
 
     artifacts:
       - $CM_BUILD_DIR/build/pkg-macos/**
