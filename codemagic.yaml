@@ -49,15 +49,12 @@ workflows:
           # Write private key to file — avoids multiline env var quoting issues
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
 
-          app-store-connect fetch-signing-files \
-            --bundle-id "$BUNDLE_ID" \
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --certificate-types IOS_DISTRIBUTION \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --key-id "$APP_STORE_CONNECT_KEY_ID" \
             --private-key "@file:/tmp/asc_key.p8" \
-            --create \
-            --save
+            --create
 
           keychain add-certificates
 
