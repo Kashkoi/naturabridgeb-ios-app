@@ -17,6 +17,9 @@ workflows:
           source: true
 
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.naturabridge.business
       groups:
         - app-store-connect
         - ios-signing
@@ -42,35 +45,6 @@ workflows:
           cd ios/App
           pod install --repo-update
 
-      - name: Set up code signing
-        script: |
-          keychain initialize
-
-          # Write private key to file — avoids multiline env var quoting issues
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
-
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --key-id "$APP_STORE_CONNECT_KEY_ID" \
-            --private-key "@file:/tmp/asc_key.p8" \
-            --create
-
-          keychain add-certificates
-
-          echo "=== Identities after fetch ==="
-          security find-identity -v -p codesigning
-          echo "=============================="
-
-          PROFILE=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.mobileprovision" | head -1)
-          PROFILE_UUID=$(security cms -D -i "$PROFILE" | plutil -extract UUID xml1 -o - - | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-          CERT_NAME=$(security find-identity -v -p codesigning | grep -v "REVOKED" | grep -oE '"[^"]+"' | head -1 | tr -d '"')
-
-          echo "Cert: $CERT_NAME"
-          echo "Profile UUID: $PROFILE_UUID"
-          echo "CODE_SIGNING_IDENTITY=$CERT_NAME" >> "$CM_ENV"
-          echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> "$CM_ENV"
-
       - name: Set build number
         script: |
           cd ios/App
@@ -87,7 +61,7 @@ workflows:
             OTHER_CODE_SIGN_FLAGS="--keychain $(echo $CM_KEYCHAIN_PATH)" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE="$PROVISIONING_PROFILE_UUID" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_SPECIFIER" \
             CODE_SIGN_IDENTITY="$CODE_SIGNING_IDENTITY" \
             archive | xcpretty
 
@@ -136,6 +110,9 @@ workflows:
           source: true
 
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.naturabridge.business
       groups:
         - app-store-connect
         - ios-signing
