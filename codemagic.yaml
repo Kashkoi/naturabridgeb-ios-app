@@ -61,21 +61,46 @@ workflows:
 
           keychain add-certificates
 
-          # Get cert name and profile UUID while still in this shell scope
-          CERT_NAME=$(security find-identity -v -p codesigning | grep "iPhone Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          # Show all available signing identities for debugging
+          echo "=== Available signing identities ==="
+          security find-identity -v -p codesigning
+          echo "==================================="
+
+          # Apple's newer certs are "Apple Distribution: ..." — match either
+          CERT_NAME=$(security find-identity -v -p codesigning | \
+            grep -E '"(Apple Distribution|iPhone Distribution):' | head -1 | \
+            sed 's/.*"\(.*\)".*/\1/')
           PROFILE=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.mobileprovision" | head -1)
-          PROFILE_UUID=$(security cms -D -i "$PROFILE" | plutil -extract UUID xml1 -o - - | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          PROFILE_UUID=$(security cms -D -i "$PROFILE" | plutil -extract UUID xml1 -o - - | \
+            sed 's/.*<string>\(.*\)<\/string>.*/\1/')
 
           echo "Certificate: $CERT_NAME"
+          echo "Profile path: $PROFILE"
           echo "Profile UUID: $PROFILE_UUID"
 
-          # Persist for later steps
+          # Persist for xcodebuild archive step
           echo "CODE_SIGNING_IDENTITY=$CERT_NAME" >> "$CM_ENV"
           echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> "$CM_ENV"
 
-          # Copy pre-committed ExportOptions (automatic signing, app-store-connect method)
-          cp build-config/ExportOptions-iOS.plist ios/App/ExportOptions-iOS.plist
-          echo "ExportOptions copied"
+          # Write ExportOptions with printf — no heredoc to avoid YAML parse issues
+          printf '<?xml version="1.0" encoding="UTF-8"?>\n' > ios/App/ExportOptions-iOS.plist
+          printf '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<plist version="1.0"><dict>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<key>method</key><string>app-store-connect</string>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<key>teamID</key><string>%s</string>\n' "$APPLE_TEAM_ID" >> ios/App/ExportOptions-iOS.plist
+          printf '<key>signingStyle</key><string>manual</string>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<key>signingCertificate</key><string>%s</string>\n' "$CERT_NAME" >> ios/App/ExportOptions-iOS.plist
+          printf '<key>provisioningProfiles</key><dict>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<key>%s</key><string>%s</string>\n' "$BUNDLE_ID" "$PROFILE_UUID" >> ios/App/ExportOptions-iOS.plist
+          printf '</dict>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<key>destination</key><string>export</string>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<key>uploadSymbols</key><true/>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<key>uploadBitcode</key><false/>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '<key>stripSwiftSymbols</key><true/>\n' >> ios/App/ExportOptions-iOS.plist
+          printf '</dict></plist>\n' >> ios/App/ExportOptions-iOS.plist
+
+          echo "ExportOptions written:"
+          cat ios/App/ExportOptions-iOS.plist
 
       # ── Step 6: Set build number ───────────────────────────────────
       - name: Set build number
