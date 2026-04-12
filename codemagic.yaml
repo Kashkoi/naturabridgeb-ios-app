@@ -73,24 +73,9 @@ workflows:
           echo "CODE_SIGNING_IDENTITY=$CERT_NAME" >> "$CM_ENV"
           echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> "$CM_ENV"
 
-          # Write ExportOptions — use automatic signing so xcodebuild
-          # finds the cert in the keychain without needing an exact name
-          cat > ios/App/ExportOptions-iOS.plist << 'PLIST_EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key><string>app-store-connect</string>
-    <key>teamID</key><string>V44J4P68PU</string>
-    <key>signingStyle</key><string>automatic</string>
-    <key>destination</key><string>export</string>
-    <key>uploadSymbols</key><true/>
-    <key>uploadBitcode</key><false/>
-    <key>stripSwiftSymbols</key><true/>
-</dict>
-</plist>
-PLIST_EOF
-          echo "ExportOptions written (automatic signing, team V44J4P68PU)"
+          # Copy pre-committed ExportOptions (automatic signing, app-store-connect method)
+          cp build-config/ExportOptions-iOS.plist ios/App/ExportOptions-iOS.plist
+          echo "ExportOptions copied"
 
       # ── Step 6: Set build number ───────────────────────────────────
       - name: Set build number

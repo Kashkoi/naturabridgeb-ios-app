@@ -4,9 +4,8 @@
 <plist version="1.0">
 <dict>
     <key>method</key>
-    <string>app-store</string>
+    <string>app-store-connect</string>
 
-    <!-- Your 10-character Apple Team ID — replace XXXXXXXXXX -->
     <key>teamID</key>
     <string>V44J4P68PU</string>
 
@@ -24,8 +23,5 @@
 
     <key>stripSwiftSymbols</key>
     <true/>
-
-    <key>manageAppVersionAndBuildNumber</key>
-    <false/>
 </dict>
 </plist>
