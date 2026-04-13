@@ -545,6 +545,76 @@ body{
 .login-switch span{color:#4FACDE;cursor:pointer;font-weight:600}
 .login-err{font-size:13px;color:#E74C3C;text-align:center;margin-bottom:12px;display:none}
 .login-err.show{display:block}
+
+/* ─── Deep Analysis Report ─────────────────────────────── */
+.deep-report{padding:0;line-height:1.6}
+.dr-header{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.dr-header-left{flex:1}
+.dr-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-0.3px}
+.dr-meta{font-size:12px;color:var(--txt-muted);margin-top:2px}
+.dr-powered{text-align:right;flex-shrink:0}
+.dr-section{background:var(--bg-card);border:1px solid var(--border);border-radius:15px;padding:18px 16px;margin-bottom:14px}
+.dr-section-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;letter-spacing:-0.2px}
+.dr-explain{font-size:13px;color:var(--txt-dim);line-height:1.65;margin-bottom:12px;padding:10px 12px;background:rgba(79,172,222,.06);border-radius:10px;border-left:3px solid var(--accent)}
+.dr-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media(min-width:744px){.dr-summary-grid{grid-template-columns:1fr 1fr 1fr 1fr}}
+.dr-summary-card{background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px 12px}
+.dr-sc-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--txt-muted);margin-bottom:6px}
+.dr-sc-value{font-size:20px;font-weight:700;margin-bottom:6px}
+.dr-sc-explain{font-size:11px;color:var(--txt-muted);line-height:1.5}
+.dr-rationale{font-size:14px;color:var(--txt-dim);line-height:1.65;padding:12px;background:rgba(46,204,113,.06);border-radius:10px;border-left:3px solid var(--green)}
+.dr-domain-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px}
+@media(min-width:480px){.dr-domain-grid{grid-template-columns:1fr 1fr}}
+.dr-domain-card{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px}
+.dr-domain-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.dr-domain-stats{display:flex;gap:12px;font-size:11px;color:var(--txt-muted);margin-bottom:6px}
+.dr-domain-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.dr-domain-fill{height:100%;border-radius:2px;transition:width .3s}
+.dr-subsection-title{font-size:13px;font-weight:700;color:var(--accent);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.dr-table{margin-bottom:10px}
+.dr-table-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(42,62,85,.5)}
+.dr-table-row:last-child{border-bottom:none}
+.dr-table-row.warn{border-left:3px solid var(--gold);padding-left:8px}
+.dr-table-label{font-size:13px;color:var(--txt);flex:1}
+.dr-table-value{font-size:12px;font-weight:700;text-align:right;white-space:nowrap;margin-left:10px}
+.dr-table-value.green{color:var(--green)}.dr-table-value.gold{color:var(--gold)}.dr-table-value.red{color:var(--red)}
+.dr-table-note{font-size:11px;color:var(--txt-muted);line-height:1.5;padding:2px 0 6px;font-style:italic}
+.dr-timing-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px}
+@media(min-width:480px){.dr-timing-grid{grid-template-columns:1fr 1fr}}
+.dr-timing-card{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px}
+.dr-timing-name{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px}
+.dr-timing-time{font-size:18px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.dr-timing-reason{font-size:11px;color:var(--txt-muted);line-height:1.5}
+.dr-specialist{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.dr-specialist-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:6px}
+.dr-specialist-q{font-size:12px;color:var(--accent);margin-bottom:8px;font-style:italic}
+.dr-specialist-text{font-size:13px;color:var(--txt-dim);line-height:1.65;white-space:pre-wrap}
+.dr-compound-card{background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.dr-compound-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.dr-compound-name{font-size:15px;font-weight:700;color:#fff}
+.dr-compound-dose{font-size:13px;color:var(--accent);font-weight:600}
+.dr-compound-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+@media(max-width:380px){.dr-compound-stats{grid-template-columns:repeat(2,1fr)}}
+.dr-cs{text-align:center;padding:8px 4px;background:rgba(255,255,255,.03);border-radius:8px}
+.dr-cs-val{font-size:16px;font-weight:700;color:var(--accent)}
+.dr-cs-label{font-size:9px;color:var(--txt-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.dr-compound-targets{font-size:12px;color:var(--txt-muted);line-height:1.5}
+.dr-trial-card{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.dr-trial-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:8px}
+.dr-trial-stats{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--txt-dim);margin-bottom:8px}
+.dr-trial-narrative{font-size:12px;color:var(--txt-muted);line-height:1.5;font-style:italic}
+.dr-minority{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:12px;margin-bottom:8px;font-size:13px;color:var(--txt-dim);line-height:1.6;white-space:pre-wrap}
+.dr-agree{font-size:13px;color:var(--green);padding:10px 0}
+.dr-disclaimer{font-size:11px;color:var(--txt-muted);line-height:1.6;padding:14px;background:rgba(231,76,60,.06);border:1px solid rgba(231,76,60,.15);border-radius:10px;margin-bottom:14px}
+.dr-appendix-divider{display:flex;align-items:center;gap:12px;margin:24px 0 16px}
+.dr-appendix-divider-line{flex:1;height:1px;background:var(--border)}
+.dr-appendix-divider-text{font-size:11px;font-weight:700;color:var(--txt-muted);letter-spacing:2px;text-transform:uppercase;white-space:nowrap}
+.dr-appendix{border-color:rgba(42,62,85,.6)}
+.dr-appendix-compound{margin-bottom:14px}
+.dr-appendix-compound-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.dr-raw{font-size:11px;color:var(--txt-muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;line-height:1.5;font-family:'SF Mono','Menlo','Cascadia Code',monospace}
+.dr-footer{text-align:center;font-size:10px;color:var(--txt-muted);padding:16px 0;line-height:2;border-top:1px solid var(--border);margin-top:8px}
+.dr-empty{font-size:13px;color:var(--txt-muted);padding:10px 0;font-style:italic}
 </style>
 </head>
 <body>
@@ -621,11 +691,11 @@ body{
     </button>
 
     <button class="btn-run" onclick="runAnalysis()">
-      🔬&nbsp; Run PBPK Analysis
+      🔬&nbsp; Run Deep Analysis
     </button>
 
     <div style="font-size:11px;color:var(--txt-muted);text-align:center;margin-top:12px;line-height:1.6">
-      Each analysis uses 1 credit &nbsp;·&nbsp; Results delivered in ~15 s
+      Each analysis uses 1 credit &nbsp;·&nbsp; Deep analysis takes 2-10 minutes
     </div>
   </div>
 
@@ -935,6 +1005,20 @@ body{
 
     <label class="label" style="margin-bottom:10px">Registered Practitioners</label>
     <div id="admin-user-list" style="font-size:13px;color:var(--txt-muted)">Loading...</div>
+  </div>
+
+  <!-- ── DEEP REPORT SCREEN ──────────────────────────────────── -->
+  <div class="screen" id="s-deep-report">
+    <div class="back-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
+          <path d="M7 1L1 6.5L7 12" stroke="#4FACDE" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Back
+      </button>
+      <span style="font-size:13px;color:var(--txt-muted);margin-left:auto" id="deep-report-name"></span>
+    </div>
+    <div id="deep-report-content"></div>
   </div>
 
 </div><!-- /app-body -->
@@ -2054,6 +2138,102 @@ async function loadAdminUsers() {
   }
   document.getElementById('login-overlay').classList.add('show');
 })();
+</script>
+
+<script src="deep-analysis.js"></script>
+<script>
+/* ── Deep Analysis override ─────────────────────────────────
+   NaturaBridgeB always runs the full 15-system deep analysis.
+   This overrides the quick runAnalysis() defined above.
+   ──────────────────────────────────────────────────────────── */
+
+async function runAnalysis() {
+  const name   = document.getElementById('f-name').value.trim() || 'My Formula';
+  const target = document.querySelector('#pill-row .pill.on')?.textContent || 'General';
+  const ov     = document.getElementById('overlay');
+
+  /* Collect ingredients from form */
+  const ingCards = Array.from(document.getElementById('ing-list').children);
+  const ingredients = ingCards.map(c => {
+    const nameEl = c.querySelector('.ing-name-wrap input') || c.querySelector('input[type="text"]');
+    const doseEl = c.querySelectorAll('input')[1];
+    return {
+      name: (nameEl?.value || '').trim().replace(/_/g, ' '),
+      dose: (doseEl?.value || '').trim()
+    };
+  }).filter(i => i.name);
+
+  if (ingredients.length < 2) {
+    alert('Please enter at least 2 ingredients for multi-compound analysis.');
+    return;
+  }
+
+  /* Credit check */
+  const credEl = document.getElementById('hdr-credits');
+  if (parseInt(credEl.textContent) <= 0) {
+    alert('No credits remaining. Upgrade your plan to continue.');
+    return;
+  }
+
+  /* Configure overlay for deep analysis */
+  ov.querySelector('.ov-title').textContent = 'Running Deep Analysis';
+  ov.querySelector('.ov-sub').textContent   = 'Calling 15 simulation systems — this may take several minutes\u2026';
+  const stepsEl = document.getElementById('steps');
+  stepsEl.innerHTML = '';
+  ov.classList.add('show');
+
+  const stepElements = [];
+
+  const orchestrator = new DeepAnalysisOrchestrator((idx, stepName, status) => {
+    /* Create step element on first reference */
+    if (!stepElements[idx]) {
+      const div = document.createElement('div');
+      div.className = 'step';
+      div.innerHTML = '<div class="dot"></div>' + stepName;
+      stepsEl.appendChild(div);
+      stepElements[idx] = div;
+    }
+    const el = stepElements[idx];
+    el.className = 'step';
+    if (status === 'running') el.classList.add('active');
+    if (status === 'done')    el.classList.add('done');
+    /* 'active' from initial enumeration — stays muted until 'running' */
+  });
+
+  try {
+    const compoundNames = ingredients.map(i => i.name);
+    const results = await orchestrator.run(compoundNames, ingredients, _currentUser || {});
+
+    ov.classList.remove('show');
+
+    /* Render full deep report */
+    const reportHTML = DeepReportRenderer.render(name, target, ingredients, results);
+    document.getElementById('deep-report-content').innerHTML = reportHTML;
+    document.getElementById('deep-report-name').textContent  = name;
+
+    /* Deduct credit */
+    _usedCredits++;
+    const remaining = Math.max(0, _INITIAL_CREDITS - _usedCredits);
+    credEl.textContent = remaining;
+    const billingCredits = document.getElementById('billing-credits');
+    if (billingCredits) billingCredits.textContent = remaining;
+    const billingUsed = document.getElementById('billing-used');
+    if (billingUsed) billingUsed.textContent = _usedCredits + ' credits';
+
+    /* Add to history */
+    addToHistory(name, ingredients.length, results.multiCompound || {});
+
+    /* Show deep report screen */
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('s-deep-report').classList.add('active');
+    document.getElementById('app-body').scrollTop = 0;
+
+  } catch (err) {
+    ov.classList.remove('show');
+    alert('Deep analysis failed: ' + err.message + '\n\nPlease check your connection and try again.');
+    console.error('[NB] Deep analysis error:', err);
+  }
+}
 </script>
 </body>
 </html>
