@@ -28,7 +28,7 @@
 
 /* ─── Reset ─────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;height:100dvh}
+html,body{height:100%;height:100dvh;height:-webkit-fill-available}
 body{
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
   background:var(--bg);color:var(--txt);
@@ -547,7 +547,7 @@ body{
 .login-err.show{display:block}
 
 /* ─── Deep Analysis Report ─────────────────────────────── */
-.deep-report{padding:0;line-height:1.6}
+.deep-report{padding:0;line-height:1.6;overflow-wrap:break-word;word-wrap:break-word}
 .dr-header{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:18px}
 .dr-header-left{flex:1}
 .dr-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-0.3px}

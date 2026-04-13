@@ -11,7 +11,7 @@
   "ios": {
     "contentInset": "always",
     "backgroundColor": "#0D1B2A",
-    "preferredContentMode": "mobile",
+    "preferredContentMode": "recommended",
     "scheme": "NaturaBridgeB",
     "limitsNavigationsToAppBoundDomains": true,
     "allowsLinkPreview": false
