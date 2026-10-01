@@ -12,7 +12,7 @@
  *   - Print/Save PDF support
  */
 
-const DEEP_API = 'https://naturabridge-api.srv1251318.hstgr.cloud';
+const DEEP_API = window.NB_API_BASE || 'https://naturabridge-api.srv1251318.hstgr.cloud';
 
 // ═══════════════════════════════════════════════════════════════════════
 // CLINICAL KNOWLEDGE BASES — enriched context for report rendering
@@ -128,7 +128,7 @@ class DeepAnalysisOrchestrator {
   async run(compoundNames, ingredients, userProfile) {
     const steps = [
       'Analysing compound interactions and CYP enzyme competition',
-      'Enriching each compound with DrugBank, UniProt, and BindingDB data',
+      'Looking up each compound\'s properties, targets and label data',
       'Simulating full GI tract journey — mouth to exit — for each compound',
       'Running subcellular and signaling pathway simulations',
       'Modelling pharmacodynamic effects and therapeutic indices',
@@ -149,6 +149,29 @@ class DeepAnalysisOrchestrator {
     }
     this.onStep(0, steps[0], 'active');
 
+    // The person the stack belongs to (age, sex, weight, conditions, medications), when known.
+    // It is NOT the signed-in practitioner. Empty object = unknown; API defaults then apply.
+    const subject = userProfile || {};
+    const sexCode = /^f/i.test(subject.sex || '') ? 'F' : /^m/i.test(subject.sex || '') ? 'M' : null;
+    const giPatient = {};
+    if (subject.age) giPatient.age = Number(subject.age);
+    if (subject.weight_kg) giPatient.weight_kg = Number(subject.weight_kg);
+    if (sexCode) giPatient.sex = sexCode;
+    const planProfile = (subject.age || sexCode || (subject.conditions || []).length) ? {
+      ...(subject.age ? { age: Math.round(Number(subject.age)) } : {}),
+      ...(sexCode ? { sex: sexCode === 'F' ? 'female' : 'male' } : {}),
+      ...(subject.weight_kg ? { weight_kg: Number(subject.weight_kg) } : {}),
+      conditions: subject.conditions || [],
+      current_medications: subject.medications || [],
+    } : null;
+    const subjectText = [
+      subject.age ? `${subject.age}-year-old` : '', sexCode === 'F' ? 'female' : sexCode === 'M' ? 'male' : '',
+      (subject.conditions || []).length ? `conditions: ${subject.conditions.join(', ')}` : '',
+      (subject.medications || []).length ? `medications: ${subject.medications.join(', ')}` : '',
+    ].filter(Boolean).join('; ');
+    const doseOf = c => parseFloat((ingredients.find(ig => ig.name.toLowerCase() === c.toLowerCase()) || {}).dose) || null;
+    const notSimulated = reason => ({ _error: true, not_simulated: true, detail: reason });
+
     try {
       // ── STAGE 1: Core multi-compound + foundation enrichment ──────────
       this.onStep(0, steps[0], 'running');
@@ -168,17 +191,38 @@ class DeepAnalysisOrchestrator {
       });
       this.onStep(1, steps[1], 'done');
 
+      // ── Physicochemical properties, per compound, from PubChem ─────────
+      // Molecular weight is exact; XLogP, TPSA and H-bond donors are PubChem's computed values.
+      // A compound PubChem cannot resolve gets NO physics-based simulation: a generic molecule
+      // is never substituted under its name.
+      const physLookups = await Promise.allSettled(
+        compoundNames.map(c => this._get('/api/v3/ext/pubchem/compound?name=' + encodeURIComponent(c)))
+      );
+      this.results.physchem = {};
+      compoundNames.forEach((c, i) => {
+        const v = physLookups[i].status === 'fulfilled' ? physLookups[i].value : null;
+        const pr = v && !v._error && Array.isArray(v.properties) ? v.properties[0] : null;
+        const mw = pr ? parseFloat(pr.MolecularWeight) : NaN;
+        this.results.physchem[c] = (pr && mw > 0 && typeof pr.XLogP === 'number')
+          ? { mw, logP: pr.XLogP, tpsa: pr.TPSA, hbd: pr.HBondDonorCount, cid: pr.CID, source: 'PubChem (XLogP, TPSA computed)' }
+          : null;
+      });
+      const noPhys = c => notSimulated(`No physicochemical data was found for "${c}" (not resolved in PubChem, or no computed logP). ` +
+        'This stage was not run for it; a generic molecule was not substituted.');
+      const noDose = c => notSimulated(`No dose was entered for "${c}", so this stage was not run for it.`);
+
       // ── STAGE 2: GI tract simulation per compound ─────────────────────
       this.onStep(2, steps[2], 'running');
       const giSims = await Promise.allSettled(
         compoundNames.map(c => {
-          const enr = this.results.enrichments[c] || {};
-          const pk = enr.pk_params || enr.enriched_params || {};
+          const ph = this.results.physchem[c];
+          if (!ph) return Promise.resolve(noPhys(c));
+          if (!doseOf(c)) return Promise.resolve(noDose(c));
           return this._post('/api/v2/git/mouth-to-exit', {
-            compound: { name: c, logP: pk.logP || 2.0, pKa: pk.pKa || 7.0, mw: pk.mw || 300, charge_type: 'neutral' },
-            dose_mg: parseFloat((ingredients.find(ig => ig.name.toLowerCase() === c.toLowerCase()) || {}).dose) || 500,
-            fed_state: 'fed',
-            patient: userProfile || {}
+            compound: { name: c, mw: ph.mw, logP: ph.logP },
+            dose_mg: doseOf(c),
+            fed_state: true,
+            patient: giPatient
           });
         })
       );
@@ -192,11 +236,12 @@ class DeepAnalysisOrchestrator {
       this.onStep(3, steps[3], 'running');
       const cellSims = await Promise.allSettled(
         compoundNames.map(c => {
-          const enr = this.results.enrichments[c] || {};
-          const pk = enr.pk_params || enr.enriched_params || {};
+          const ph = this.results.physchem[c];
+          if (!ph) return Promise.resolve(noPhys(c));
           return this._post('/api/v2/cell/full-cellular-simulation', {
-            compound: { name: c, mw: pk.mw || 300, logP: pk.logP || 2.0, pKa: pk.pKa || 7.0, charge_type: 'neutral' },
-            dose_mg: parseFloat((ingredients.find(ig => ig.name.toLowerCase() === c.toLowerCase()) || {}).dose) || 500,
+            compound_name: c, mw: ph.mw, logP: ph.logP,
+            ...(typeof ph.tpsa === 'number' ? { tpsa: ph.tpsa } : {}),
+            ...(typeof ph.hbd === 'number' ? { hbd: ph.hbd } : {}),
             cell_type: 'hepatocyte',
             t_hours: 8
           });
@@ -211,27 +256,33 @@ class DeepAnalysisOrchestrator {
       // ── STAGE 4: PD modeling ──────────────────────────────────────────
       this.onStep(4, steps[4], 'running');
       const pdResult = await this._post('/api/v2/pd/multi-compound', {
-        compound_stack: compoundNames.map(c => ({
-          compound: c,
-          dose_mg: parseFloat((ingredients.find(ig => ig.name.toLowerCase() === c.toLowerCase()) || {}).dose) || 500
-        })),
-        patient_profile: userProfile || {}
+        compound_stack: compoundNames,
+        pbpk_results_dict: {},
+        patient_profile: giPatient
       }).catch(e => ({ error: e.message }));
       this.results.pdModeling = pdResult;
       this.onStep(4, steps[4], 'done');
 
       // ── STAGE 5: ArbiterAI validation ─────────────────────────────────
       this.onStep(5, steps[5], 'running');
+      const firstPh = this.results.physchem[compoundNames[0]];
       const [arbiterValidation, arbiterConsensus] = await Promise.allSettled([
         this._post('/api/v2/arbiter/validate-simulation', {
-          simulation_result: { compounds: compoundNames, multi_compound: this.results.multiCompound },
+          simulation_result: {
+            compound: compoundNames[0],
+            ...(doseOf(compoundNames[0]) ? { dose_mg: doseOf(compoundNames[0]) } : {}),
+            ...(firstPh ? { logP: firstPh.logP } : {}),
+          },
           compound_stack: compoundNames,
-          concurrent_meds: []
+          concurrent_meds: subject.medications || []
         }),
         this._post('/api/v2/arbiter/consensus-simulation', {
           compound: compoundNames[0],
-          dose: parseFloat((ingredients[0] || {}).dose) || 500,
-          patient_profile: userProfile || {}
+          ...(doseOf(compoundNames[0]) ? { dose: doseOf(compoundNames[0]) + 'mg' } : {}),
+          ...((giPatient.age || giPatient.sex) ? { patient_profile: {
+            ...(giPatient.age ? { age: Math.round(giPatient.age) } : {}),
+            ...(giPatient.weight_kg ? { weight_kg: giPatient.weight_kg } : {}),
+            ...(giPatient.sex ? { sex: giPatient.sex } : {}) } } : {})
         })
       ]);
       this.results.arbiterValidation = arbiterValidation.status === 'fulfilled' ? arbiterValidation.value : null;
@@ -242,7 +293,7 @@ class DeepAnalysisOrchestrator {
       this.onStep(6, steps[6], 'running');
       const chronoResults = await Promise.allSettled(
         compoundNames.map(c => this._post('/api/v2/circadian/optimal-dose-time', {
-          drug_name: c, entrainment_offset: 0
+          drug_name: c, entrainment_offset_h: 0
         }))
       );
       this.results.chronotherapy = {};
@@ -255,11 +306,12 @@ class DeepAnalysisOrchestrator {
       this.onStep(7, steps[7], 'running');
       const [herbDrug, chronoWeave] = await Promise.allSettled([
         this._post('/api/v3/herb-drug/query', { substances: compoundNames, include_theoretical: true }),
-        this._post('/api/v3/chrono-weave/simulate', {
-          compounds: compoundNames,
-          doses: compoundNames.map(c => parseFloat((ingredients.find(ig => ig.name.toLowerCase() === c.toLowerCase()) || {}).dose) || 500),
-          time_span_h: 24
-        })
+        (() => {
+          const dosed = compoundNames.filter(c => doseOf(c));
+          return dosed.length >= 2
+            ? this._post('/api/v3/chrono-weave/simulate', { compounds: dosed, doses: dosed.map(doseOf), time_span_h: 24 })
+            : Promise.resolve(notSimulated('Timing interactions need a dose for at least two compounds.'));
+        })()
       ]);
       this.results.herbDrugInteractions = herbDrug.status === 'fulfilled' ? herbDrug.value : null;
       this.results.temporalDDI = chronoWeave.status === 'fulfilled' ? chronoWeave.value : null;
@@ -278,12 +330,9 @@ class DeepAnalysisOrchestrator {
       // ── STAGE 9: Virtual N-of-1 trials ────────────────────────────────
       this.onStep(9, steps[9], 'running');
       const nof1Results = await Promise.allSettled(
-        compoundNames.slice(0, 4).map(c => this._post('/api/v2/trials/quick-nof1', {
-          compound: c,
-          dose_mg: parseFloat((ingredients.find(ig => ig.name.toLowerCase() === c.toLowerCase()) || {}).dose) || 500,
-          endpoint: 'nfkb_inhibition',
-          n_clones: 200
-        }))
+        compoundNames.slice(0, 4).map(c => doseOf(c)
+          ? this._post('/api/v2/trials/quick-nof1', { compound: c, dose_mg: doseOf(c), endpoint: 'nfkb_inhibition', n_clones: 200 })
+          : Promise.resolve(noDose(c)))
       );
       this.results.virtualTrials = {};
       compoundNames.slice(0, 4).forEach((c, i) => {
@@ -300,21 +349,21 @@ class DeepAnalysisOrchestrator {
           drug_name: compoundNames[0],
           compounds: compoundNames,
           question: `Provide a thorough cardiovascular safety assessment for this supplement formula containing: ${specialistQ}. Cover: (1) cardiac rhythm effects and QT prolongation risk, (2) blood pressure implications, (3) vascular health benefits, (4) any compounds requiring cardiac monitoring, (5) overall cardiovascular risk-benefit for daily use.`,
-          patient_context: userProfile || {}
+          patient_context: subjectText
         }),
         this._post('/v1/specialist/consult', {
           specialist: 'neurologist',
           drug_name: compoundNames[0],
           compounds: compoundNames,
           question: `Provide a thorough neurological assessment for this supplement formula containing: ${specialistQ}. Cover: (1) blood-brain barrier penetration for each compound, (2) neurotransmitter effects (GABA, glutamate, serotonin, dopamine), (3) neuroprotective potential, (4) CNS depression/stimulation risk, (5) cognitive performance implications.`,
-          patient_context: userProfile || {}
+          patient_context: subjectText
         }),
         this._post('/v1/specialist/consult', {
           specialist: 'cardiologist',
           drug_name: compoundNames[0],
           compounds: compoundNames,
           question: `Acting as an integrative medicine physician and clinical pharmacologist, provide a holistic assessment of this supplement formula containing: ${specialistQ}. Cover: (1) overall formula coherence — do these ingredients make sense together? (2) bioavailability concerns and absorption competition, (3) recommended delivery format (capsule, powder, liposomal), (4) population-specific considerations (age, gender, common medications), (5) what you would add or remove to optimise this formula.`,
-          patient_context: userProfile || {}
+          patient_context: subjectText
         })
       ]);
       this.results.cardioConsult = cardio.status === 'fulfilled' ? cardio.value : null;
@@ -326,7 +375,7 @@ class DeepAnalysisOrchestrator {
       this.onStep(11, steps[11], 'running');
       const planResult = await this._post('/v1/plan/generate?mode=ai&include_debate=true', {
         drug_name: compoundNames[0],
-        user_profile: userProfile || null
+        user_profile: planProfile
       }).catch(e => ({ error: e.message }));
       this.results.plan = planResult;
 
@@ -352,11 +401,19 @@ class DeepAnalysisOrchestrator {
 
       // ── STAGE 12: Epigenetic impact ───────────────────────────────────
       this.onStep(12, steps[12], 'running');
-      const epiResult = await this._post('/api/v2/epiwind/hallmarks-simulate', {
-        initial_age: (userProfile || {}).age || 40,
-        years: 10,
-        interventions: compoundNames.map(c => c.toLowerCase().replace(/\s+/g, '_'))
-      }).catch(e => ({ error: e.message }));
+      // The hallmark model accepts a fixed set of interventions. Only compounds it actually
+      // models are sent, at the entered dose; anything else would be silently ignored.
+      const EPI_KEYS = { nmn: ['nmn_dose_mg', 1], 'nicotinamide mononucleotide': ['nmn_dose_mg', 1],
+                         metformin: ['metformin_mg_day', 1], rapamycin: ['rapamycin_mg_week', 7], sirolimus: ['rapamycin_mg_week', 7] };
+      const epiInterventions = {};
+      compoundNames.forEach(c => { const k = EPI_KEYS[c.toLowerCase().trim()]; if (k && doseOf(c)) epiInterventions[k[0]] = doseOf(c) * k[1]; });
+      const epiResult = !subject.age
+        ? notSimulated('The longevity model needs the person\'s age; none was provided.')
+        : !Object.keys(epiInterventions).length
+          ? notSimulated('None of these compounds is among the interventions the longevity model represents (NMN, metformin, rapamycin).')
+          : await this._post('/api/v2/epiwind/hallmarks-simulate', {
+              initial_age: Number(subject.age), years: 10, interventions: epiInterventions
+            }).catch(e => ({ error: e.message }));
       this.results.epigenetics = epiResult;
       this.onStep(12, steps[12], 'done');
 
@@ -364,8 +421,8 @@ class DeepAnalysisOrchestrator {
       this.onStep(13, steps[13], 'running');
       const regimenResult = await this._post('/v1/regimen/analyze', {
         compounds: compoundNames,
-        compound_details: ingredients.map(i => ({ name: i.name, dosage: (i.dose || '500') + 'mg', frequency: 'daily' })),
-        user_profile: userProfile || {},
+        compound_details: ingredients.map(i => ({ name: i.name, dosage: i.dose ? i.dose + 'mg' : '', frequency: '' })),
+        user_profile: planProfile || {},
         include_llm_analysis: true,
         include_discovery: true
       }).catch(e => ({ error: e.message }));
@@ -439,8 +496,8 @@ class DeepReportRenderer {
 
         <!-- ═══ PRINT / SAVE TOOLBAR ═══ -->
         <div class="dr-toolbar no-print">
-          <button class="dr-print-btn" onclick="window.print()">🖨️ Print Report</button>
-          <button class="dr-print-btn" onclick="window.print()">📄 Save as PDF</button>
+          <button class="dr-print-btn desktop-only" onclick="printReport()">🖨️ Print / Save as PDF</button>
+          
         </div>
 
         <!-- ═══ REPORT HEADER ═══ -->
@@ -984,6 +1041,7 @@ class DeepReportRenderer {
   static _renderGIAppendix(giSims, compounds) {
     return compounds.map(c => {
       const data = giSims[c];
+      if (data && data.not_simulated) return `<div class="dr-appendix-compound"><div class="dr-appendix-compound-title">${this._prettyName(c)}</div><div class="dr-empty">Not simulated. ${this._esc(data.detail)}</div></div>`;
       if (!data || data._error) return `<div class="dr-appendix-compound"><div class="dr-appendix-compound-title">${this._prettyName(c)}</div><div class="dr-empty">GI simulation could not be completed. The backend may not have sufficient parameters for this compound.</div></div>`;
       return `<div class="dr-appendix-compound">
         <div class="dr-appendix-compound-title">${this._prettyName(c)} — GI Tract Journey</div>
@@ -995,6 +1053,7 @@ class DeepReportRenderer {
   static _renderCellAppendix(cellSims, compounds) {
     return compounds.map(c => {
       const data = cellSims[c];
+      if (data && data.not_simulated) return `<div class="dr-appendix-compound"><div class="dr-appendix-compound-title">${this._prettyName(c)}</div><div class="dr-empty">Not simulated. ${this._esc(data.detail)}</div></div>`;
       if (!data || data._error) return `<div class="dr-appendix-compound"><div class="dr-appendix-compound-title">${this._prettyName(c)}</div><div class="dr-empty">Cellular simulation could not be completed for this compound.</div></div>`;
       return `<div class="dr-appendix-compound">
         <div class="dr-appendix-compound-title">${this._prettyName(c)} — Subcellular Distribution</div>

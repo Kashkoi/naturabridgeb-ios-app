@@ -1,0 +1,12 @@
+{
+  "appId": "com.naturabridge.business",
+  "appName": "NaturaBridgeB",
+  "webDir": "../www",
+  "android": {
+    "backgroundColor": "#050E1F",
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

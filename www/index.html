@@ -706,6 +706,7 @@ body{
   .dr-footer { color: #666; border-color: #ddd; }
   a { color: #1E3A5F; }
 }
+  body.native .desktop-only{display:none !important}
 </style>
 </head>
 <body>
@@ -741,7 +742,7 @@ body{
     <div class="logo-name">NaturaBridgeB<sup>™</sup></div>
   </div>
   <div class="header-right">
-    <div class="credits-chip">⚡ <span class="num" id="hdr-credits">5</span> credits</div>
+    <div class="credits-chip">Beta</div>
     <div class="company-chip" id="hdr-company">Alpha Inception</div>
   </div>
 </header>
@@ -786,196 +787,18 @@ body{
     </button>
 
     <div style="font-size:11px;color:var(--txt-muted);text-align:center;margin-top:12px;line-height:1.6">
-      Each analysis uses 1 credit &nbsp;·&nbsp; Deep analysis takes 2-10 minutes
-    </div>
-  </div>
-
-  <!-- ── RESULTS SCREEN ───────────────────────────────────────── -->
-  <div class="screen" id="s-results">
-    <div class="back-bar">
-      <button class="back-btn" onclick="goBack()">
-        <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
-          <path d="M7 1L1 6.5L7 12" stroke="#4FACDE" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
-        Back
-      </button>
-    </div>
-
-    <!-- Report header -->
-    <div class="result-hdr">
-      <div>
-        <div class="result-hdr-title" id="r-title">Formula</div>
-        <div class="result-hdr-sub">
-          <span id="r-target">General</span>
-          &nbsp;·&nbsp; <span id="r-date"></span>
-        </div>
-      </div>
-      <div class="nb-badge">
-        <span>Powered by</span>
-        NaturaBridgeB™
-      </div>
-    </div>
-
-    <!-- PBPK Chart (generated dynamically) -->
-    <div class="chart-box">
-      <div class="chart-box-label">PBPK Plasma Concentration — Time Curve</div>
-      <div id="pbpk-chart-container">
-        <svg id="pbpk-chart" viewBox="0 0 340 145" xmlns="http://www.w3.org/2000/svg"></svg>
-      </div>
-    </div>
-
-    <!-- Key metrics -->
-    <div class="metric-grid">
-      <div class="metric-card">
-        <div class="m-label">Bottleneck</div>
-        <div class="m-val red" style="font-size:16px">Curcumin</div>
-        <div class="m-sub">1% oral bioavail.</div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Interactions</div>
-        <div class="m-val gold">11</div>
-        <div class="m-sub">found · top: MAJOR</div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Cardiac Risk</div>
-        <div class="m-val red">HIGH</div>
-        <div class="m-sub">2 of 5 rated</div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Ingredients</div>
-        <div class="m-val" style="color:#fff" id="r-ing-count">5</div>
-        <div class="m-sub">analysed</div>
-      </div>
-    </div>
-
-    <!-- Ingredient PK Summary (populated by API) -->
-    <div class="section-card" id="pk-summary-section">
-      <div class="sc-header">
-        <div class="sc-title">Ingredient PK Summary</div>
-        <div style="font-size:11px;color:var(--txt-muted)">Tmax &nbsp;·&nbsp; foral</div>
-      </div>
-      <div id="pk-rows" style="color:var(--txt-muted);font-size:12px;padding:8px 0">Awaiting analysis...</div>
-    </div>
-
-    <!-- Herb-Drug Interactions -->
-    <div class="section-card warn">
-      <div class="sc-header">
-        <div class="sc-title">Herb-Drug Interaction Screen</div>
-        <div class="badge gold">MAJOR</div>
-      </div>
-      <div style="font-size:12px;color:var(--txt-muted);margin-bottom:10px">
-        11 interactions found &nbsp;·&nbsp; showing top 5
-      </div>
-      <div class="int-row">
-        <div class="int-sev gold">MAJOR</div>
-        <div class="int-name">Turmeric + Warfarin</div>
-        <div class="int-note">Inhibits platelet aggregation &amp; COX-2 · Increased bleeding risk</div>
-      </div>
-      <div class="int-row">
-        <div class="int-sev gold">MAJOR</div>
-        <div class="int-name">Turmeric + Tacrolimus</div>
-        <div class="int-note">CYP3A4 inhibition raises tacrolimus levels · nephrotoxicity risk</div>
-      </div>
-      <div class="int-row">
-        <div class="int-sev gold">MAJOR</div>
-        <div class="int-name">Goldenseal + CYP3A4 substrates</div>
-        <div class="int-note">Berberine is a potent CYP3A4 inhibitor in vivo · markedly elevated plasma levels</div>
-      </div>
-      <div class="int-row">
-        <div class="int-sev gold">MAJOR</div>
-        <div class="int-name">Goldenseal + Cyclosporine</div>
-        <div class="int-note">P-gp inhibition increases cyclosporine absorption · nephrotoxicity</div>
-      </div>
-      <div class="int-row">
-        <div class="int-sev" style="color:var(--accent)">MODERATE</div>
-        <div class="int-name">Turmeric + Statins</div>
-        <div class="int-note">CYP3A4 inhibition may increase statin levels · myopathy risk</div>
-      </div>
-      <div class="source-note">
-        Source: NaturaBridgeB Herb-Drug RAG — 106 curated interactions across 20 herbs &amp; 26 drug classes
-        &nbsp;·&nbsp; Traditional Medicine RAG — 50+ compounds across TCM, Ayurveda, Amazonian &amp; 7 further traditions.
-      </div>
-    </div>
-
-    <!-- Cardiac Safety -->
-    <div class="section-card danger">
-      <div class="sc-header">
-        <div class="sc-title">12-Organ Safety — Cardiac (hERG)</div>
-        <div class="badge red">HIGH</div>
-      </div>
-      <div style="font-size:12px;color:var(--txt-muted);margin-bottom:10px">
-        2 of 5 ingredients rated
-      </div>
-      <div class="cardiac-row">
-        <div class="cardiac-left">
-          <div class="name">Curcumin</div>
-          <div class="dose">500 mg &nbsp;·&nbsp; hERG IC50: 12.50 µM</div>
-        </div>
-        <div class="cardiac-right">
-          <div class="risk red">HIGH</div>
-          <div class="margin">Margin: 1.74×</div>
-        </div>
-      </div>
-      <div class="cardiac-row">
-        <div class="cardiac-left">
-          <div class="name">Berberine HCl</div>
-          <div class="dose">500 mg &nbsp;·&nbsp; hERG IC50: 0.71 µM</div>
-        </div>
-        <div class="cardiac-right">
-          <div class="risk red">HIGH</div>
-          <div class="margin">Margin: 0.06×</div>
-        </div>
-      </div>
-      <div class="source-note">
-        Safety margin &lt; 30× triggers formal QT study per ICH E14.
-        Compounds rated HIGH should not be formulated without prior cardiac pharmacology review.
-      </div>
-    </div>
-
-    <!-- Traditional Medicine Provenance -->
-    <div class="section-card" id="trad-provenance-section" style="display:none">
-      <div class="sc-header">
-        <div class="sc-title">Traditional Medicine Provenance</div>
-        <div class="badge" style="background:rgba(79,172,222,.12);color:var(--accent);border:1px solid rgba(79,172,222,.3)">TRAD</div>
-      </div>
-      <div style="font-size:12px;color:var(--txt-muted);margin-bottom:10px" id="trad-prov-count">
-        0 traditional compounds detected
-      </div>
-      <div id="trad-prov-rows"></div>
-      <div class="source-note">
-        Source: NaturaBridgeB Traditional Medicine RAG — 50+ compounds across TCM, Ayurveda,
-        Amazonian, European, African, Native American, Unani, Siberian, Pacific Islander &amp; Kampo traditions.
-      </div>
-    </div>
-
-    <!-- Actionable Insight -->
-    <div class="insight-box">
-      <h4>Actionable Insight — NaturaBridgeB Recommendation</h4>
-      <p>
-        Run a full Discovery Engine analysis to receive: (1) quantified AUC improvement
-        prediction for each delivery format, (2) synergy opportunities across all ingredient
-        pairs via SynergyForge, (3) microbiome archetype impact assessment, and
-        (4) chronopharmacology timing optimisation via Chrono-Cascade.
-        Contact your NaturaBridgeB representative to unlock the full report.
-      </p>
-    </div>
-
-    <!-- Footer -->
-    <div class="report-footer">
-      Report ID: NB-<span id="r-id">------</span><br>
-      PBPK: 1-compartment Bateman + 12-organ safety screen + herb-drug RAG<br>
-      Not a substitute for clinical pharmacokinetic studies
+      A deep analysis takes 2–10 minutes. Analyses are not metered or charged during the beta.
     </div>
   </div>
 
   <!-- ── HISTORY SCREEN ────────────────────────────────────────── -->
   <div class="screen" id="s-history">
     <div class="screen-title">History</div>
-    <div class="screen-sub">Your previous formulation analyses.</div>
+    <div class="screen-sub">Analyses run on this device. Reports are not stored on NaturaBridge servers.</div>
 
     <div id="history-list">
       <div style="color:var(--txt-muted);font-size:13px;padding:20px 0;text-align:center">
-        No analyses yet. Run your first PBPK analysis to see results here.
+        No analyses on this device yet. Run a deep analysis to see it here.
       </div>
     </div>
   </div>
@@ -983,38 +806,20 @@ body{
   <!-- ── BILLING SCREEN ────────────────────────────────────────── -->
   <div class="screen" id="s-billing">
     <div class="screen-title">Billing</div>
-    <div class="screen-sub">Manage your plan and credit balance.</div>
-
+    <div class="screen-sub">NaturaBridgeB is in beta.</div>
     <div class="list-section">
       <div class="list-row">
-        <div class="lbl">Current Plan</div>
-        <div class="val accent">FREE</div>
+        <div class="lbl">Plan</div>
+        <div class="val accent">Beta</div>
       </div>
       <div class="list-row">
-        <div class="lbl">Credits Remaining</div>
-        <div class="val accent" id="billing-credits">5</div>
-      </div>
-      <div class="list-row">
-        <div class="lbl">Used This Month</div>
-        <div class="val" id="billing-used">0 credits</div>
-      </div>
-      <div class="list-row">
-        <div class="lbl">Next Renewal</div>
-        <div class="val">—</div>
+        <div class="lbl">Charges</div>
+        <div class="val">None</div>
       </div>
     </div>
-
-    <button class="btn-run" style="margin-bottom:10px;font-size:15px">⚡&nbsp; Upgrade to Pro — $99/mo</button>
-    <button class="btn-outline" style="margin-bottom:22px">Purchase Credit Pack</button>
-
-    <label class="label" style="margin-bottom:12px">Available Plans</label>
-    <div class="plan-card">
-      <div class="plan-name">Pro — $99 / month</div>
-      <div class="plan-desc">50 reports &nbsp;·&nbsp; Full PBPK &nbsp;·&nbsp; SynergyForge &nbsp;·&nbsp; Chrono-Cascade &nbsp;·&nbsp; API access</div>
-    </div>
-    <div class="plan-card">
-      <div class="plan-name">Enterprise — Contact Us</div>
-      <div class="plan-desc">Unlimited reports &nbsp;·&nbsp; White-label &nbsp;·&nbsp; Custom integrations &nbsp;·&nbsp; Dedicated support</div>
+    <div style="font-size:13px;color:var(--txt-muted);line-height:1.7">
+      No subscription is active on this account and nothing is being charged. Plans and pricing will
+      appear here before any billing starts.
     </div>
   </div>
 
@@ -1029,7 +834,7 @@ body{
       <div>
         <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:3px" id="prof-name">—</div>
         <div style="font-size:13px;color:var(--txt-muted)" id="prof-email">—</div>
-        <div style="font-size:11px;color:var(--accent);margin-top:4px" id="prof-plan">FREE Plan</div>
+        <div style="font-size:11px;color:var(--accent);margin-top:4px" id="prof-plan">Beta</div>
       </div>
     </div>
 
@@ -1052,32 +857,13 @@ body{
       </div>
     </div>
 
-    <div class="list-section">
-      <div class="list-row">
-        <div class="lbl">Notifications</div>
-        <div class="val accent">Enabled</div>
-      </div>
-      <div class="list-row">
-        <div class="lbl">Default Target Window</div>
-        <div class="val">General</div>
-      </div>
-      <div class="list-row">
-        <div class="lbl">Export Format</div>
-        <div class="val">PDF + HTML</div>
-      </div>
-      <div class="list-row">
-        <div class="lbl">Units</div>
-        <div class="val">mg / µM</div>
-      </div>
-    </div>
-
     <button class="btn-danger" onclick="doLogout()">Sign Out</button>
   </div>
 
   <!-- ── ADMIN SCREEN ──────────────────────────────────────────── -->
   <div class="screen" id="s-admin">
     <div class="screen-title">Admin Dashboard</div>
-    <div class="screen-sub">Manage registered practitioners and credit allocations.</div>
+    <div class="screen-sub">Registered accounts.</div>
 
     <div id="admin-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center">
@@ -1094,7 +880,7 @@ body{
       </div>
     </div>
 
-    <label class="label" style="margin-bottom:10px">Registered Practitioners</label>
+    <label class="label" style="margin-bottom:10px">Registered accounts</label>
     <div id="admin-user-list" style="font-size:13px;color:var(--txt-muted)">Loading...</div>
   </div>
 
@@ -1472,7 +1258,21 @@ let TRAD_DB = [
 ];
 
 /* VPS base URL — all NaturaBridge API calls go here */
-const NB_API = 'https://naturabridge-api.srv1251318.hstgr.cloud';
+const NB_PROD_API = 'https://naturabridge-api.srv1251318.hstgr.cloud';
+// A local dev server (http://localhost only) may point the app at a local backend with ?api=http://localhost:PORT
+const NB_API = (location.protocol === 'http:' && location.hostname === 'localhost'
+  && new URLSearchParams(location.search).get('api')) || NB_PROD_API;
+window.NB_API_BASE = NB_API;
+const IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+if (IS_NATIVE) document.body.classList.add('native');
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function printReport() {
+  if (IS_NATIVE) { alert('Printing is available in the desktop app.'); return; }
+  window.print();
+}
 
 /* Fetch live TRAD_DB from VPS on startup; fallback to embedded array if offline */
 (async () => {
@@ -1611,415 +1411,44 @@ function removeIng(id) {
 
 /* ── Run analysis — REAL backend call ──────────────────── */
 
-async function runAnalysis() {
-  const name   = document.getElementById('f-name').value.trim() || 'My Formula';
-  const target = document.querySelector('#pill-row .pill.on')?.textContent || 'General';
-  const ov     = document.getElementById('overlay');
+const HISTORY_KEY = 'nbb_history';
+function loadHistory() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; } }
+function historyOwner() { return (typeof _currentUser !== 'undefined' && _currentUser && _currentUser.id) || null; }
 
-  // Collect ingredient names from the form
-  const ingCards = Array.from(document.getElementById('ing-list').children);
-  const ingredients = ingCards.map(c => {
-    const nameEl = c.querySelector('.ing-name-wrap input') || c.querySelector('input[type="text"]');
-    const doseEl = c.querySelectorAll('input')[1];
-    return {
-      name: (nameEl?.value || '').trim().replace(/_/g, ' '),
-      dose: (doseEl?.value || '').trim()
-    };
-  }).filter(i => i.name);
-
-  if (ingredients.length < 2) {
-    alert('Please enter at least 2 ingredients for multi-compound analysis.');
-    return;
-  }
-
-  // Check credits
-  const credEl = document.getElementById('hdr-credits');
-  const currentCredits = parseInt(credEl.textContent);
-  if (currentCredits <= 0) {
-    alert('No credits remaining. Upgrade your plan to continue.');
-    return;
-  }
-
-  // Show overlay, reset steps
-  for (let i = 1; i <= 5; i++) {
-    const s = document.getElementById('st' + i);
-    s.classList.remove('active','done');
-  }
-  document.getElementById('st1').classList.add('active');
-  ov.classList.add('show');
-
-  // Advance steps with real backend call
-  const stepTimers = [];
-  function advanceStep(n) {
-    return new Promise(r => {
-      const t = setTimeout(() => {
-        if (n > 1) {
-          const prev = document.getElementById('st' + (n-1));
-          prev.classList.remove('active'); prev.classList.add('done');
-        }
-        if (n <= 5) document.getElementById('st' + n).classList.add('active');
-        r();
-      }, 600);
-      stepTimers.push(t);
-    });
-  }
-
-  try {
-    await advanceStep(1);
-
-    // Call real backend: multi-compound analyze
-    const compoundNames = ingredients.map(i => i.name);
-    const analyzePromise = fetch(NB_API + '/api/v1/multi-compound/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ compounds: compoundNames })
-    }).then(r => r.json());
-
-    await advanceStep(2);
-
-    // Also fetch herb-drug RAG interactions if available
-    const ragPromise = fetch(NB_API + '/api/v3/trad/compounds').then(r => r.json()).catch(() => []);
-
-    await advanceStep(3);
-
-    const [apiResult, tradDB] = await Promise.all([analyzePromise, ragPromise]);
-
-    await advanceStep(4);
-
-    if (apiResult.error || apiResult.detail) {
-      throw new Error(apiResult.detail || apiResult.error || 'Backend analysis failed');
-    }
-
-    await advanceStep(5);
-    document.getElementById('st5').classList.remove('active');
-    document.getElementById('st5').classList.add('done');
-
-    await new Promise(r => setTimeout(r, 400));
-    ov.classList.remove('show');
-
-    // Populate results from REAL API response
-    populateResults(name, target, ingredients, apiResult);
-
-    // Traditional medicine provenance
-    const tradHits = ingredients.map(i => detectTrad(i.name)).filter(Boolean);
-    const provSec  = document.getElementById('trad-provenance-section');
-    if (tradHits.length > 0) {
-      document.getElementById('trad-prov-count').textContent =
-        tradHits.length + ' traditional compound' + (tradHits.length > 1 ? 's' : '') + ' detected';
-      document.getElementById('trad-prov-rows').innerHTML = tradHits.map(c =>
-        `<div class="trad-prov-row">` +
-          `<div class="trad-prov-head">` +
-            `<span class="trad-prov-name">${c.label}</span>` +
-            `<span class="trad-badge ${tradClass(c.tradition)}">${c.tradition}</span>` +
-          `</div>` +
-          `<div class="trad-prov-line tpl-const"><b>Active constituents:</b> ${c.constituents}</div>` +
-          `<div class="trad-prov-line tpl-use"><b>Traditional use:</b> ${c.use}</div>` +
-          `<div class="trad-prov-line tpl-int"><b>Key interactions:</b> ${c.interactions}</div>` +
-        `</div>`
-      ).join('');
-      provSec.style.display = '';
-    } else {
-      provSec.style.display = 'none';
-    }
-
-    // Deduct credit
-    _usedCredits++;
-    const remaining = Math.max(0, _INITIAL_CREDITS - _usedCredits);
-    credEl.textContent = remaining;
-    const billingCredits = document.getElementById('billing-credits');
-    if (billingCredits) billingCredits.textContent = remaining;
-    const billingUsed = document.getElementById('billing-used');
-    if (billingUsed) billingUsed.textContent = _usedCredits + ' credits';
-
-    // Add to history
-    addToHistory(name, ingredients.length, apiResult);
-
-    // Show results
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('s-results').classList.add('active');
-    document.getElementById('app-body').scrollTop = 0;
-
-  } catch (err) {
-    ov.classList.remove('show');
-    stepTimers.forEach(t => clearTimeout(t));
-    alert('Analysis failed: ' + err.message + '\n\nPlease check your internet connection and try again.');
-    console.error('Analysis error:', err);
-  }
-}
-
-function generatePBPKChart(compounds, profiles) {
-  const colors = ['#2ECC71','#4FACDE','#F5A623','#E74C3C','#9B59B6','#1ABC9C','#E67E22','#3498DB'];
-  const svg = document.getElementById('pbpk-chart');
-  const W = 340, baseline = 122, top = 18;
-
-  // Grid + axis
-  let html = `
-    <line x1="0" y1="${baseline}" x2="${W}" y2="${baseline}" stroke="#2A3E55" stroke-width=".6"/>
-    <line x1="0" y1="88" x2="${W}" y2="88" stroke="#2A3E55" stroke-width=".4" stroke-dasharray="4,4"/>
-    <line x1="0" y1="54" x2="${W}" y2="54" stroke="#2A3E55" stroke-width=".4" stroke-dasharray="4,4"/>
-    <line x1="0" y1="20" x2="${W}" y2="20" stroke="#2A3E55" stroke-width=".4" stroke-dasharray="4,4"/>
-    <text x="2"   y="134" font-size="8" fill="#6E8FA8">0h</text>
-    <text x="78"  y="134" font-size="8" fill="#6E8FA8">2h</text>
-    <text x="163" y="134" font-size="8" fill="#6E8FA8">4h</text>
-    <text x="246" y="134" font-size="8" fill="#6E8FA8">6h</text>
-    <text x="325" y="134" font-size="8" fill="#6E8FA8">8h</text>
-  `;
-
-  // Generate a Bateman-like curve for each compound
-  compounds.forEach((name, idx) => {
-    const col = colors[idx % colors.length];
-    const prof = profiles[name] || {};
-    // Use PK data if available, else generate plausible variation per compound
-    const seed = name.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
-    const tmax = prof.tmax_h || (1 + (seed % 5) * 0.7);   // hours to peak
-    const foral = prof.bioavailability_pct != null ? prof.bioavailability_pct / 100 : (0.1 + ((seed * 7) % 80) / 100);
-    const halfLife = prof.half_life_h || (2 + (seed % 6));
-
-    // Generate 40 points along 0-8h Bateman curve: C(t) = F * (e^(-ke*t) - e^(-ka*t))
-    const ka = Math.log(2) / (tmax * 0.4);  // absorption rate
-    const ke = Math.log(2) / halfLife;       // elimination rate
-    const points = [];
-    for (let i = 0; i <= 40; i++) {
-      const t = (i / 40) * 8;
-      const c = foral * (Math.exp(-ke * t) - Math.exp(-ka * t));
-      points.push({ t, c });
-    }
-    const maxC = Math.max(...points.map(p => p.c)) || 1;
-
-    const pathPoints = points.map(p => {
-      const x = (p.t / 8) * W;
-      const y = baseline - (p.c / maxC) * foral * (baseline - top);
-      return `${x.toFixed(1)},${Math.max(top, y).toFixed(1)}`;
-    });
-
-    const gradId = 'g' + idx;
-    html += `
-      <defs>
-        <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${col}" stop-opacity=".25"/>
-          <stop offset="100%" stop-color="${col}" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <polygon points="0,${baseline} ${pathPoints.join(' ')} ${W},${baseline}" fill="url(#${gradId})"/>
-      <polyline points="${pathPoints.join(' ')}" fill="none" stroke="${col}" stroke-width="1.5"/>
-    `;
-
-    // Legend
-    const lx = 2 + idx * (W / Math.min(compounds.length, 4));
-    const shortName = name.length > 12 ? name.slice(0, 11) + '…' : name;
-    html += `
-      <rect x="${lx}" y="3" width="9" height="9" rx="2" fill="${col}"/>
-      <text x="${lx + 12}" y="11" font-size="7" fill="#E8E8F0">${shortName}</text>
-    `;
-  });
-
-  svg.innerHTML = html;
-}
-
-function populateResults(name, target, ingredients, api) {
-  document.getElementById('r-title').textContent  = name;
-  document.getElementById('r-target').textContent = target;
-  document.getElementById('r-ing-count').textContent = api.compound_count || ingredients.length;
-  document.getElementById('r-date').textContent   =
-    new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  document.getElementById('r-id').textContent     =
-    Math.random().toString(36).slice(2,8).toUpperCase();
-
-  // Generate PBPK chart from actual compounds
-  generatePBPKChart(ingredients.map(i => i.name), api.compound_profiles || {});
-
-  // Safety flags → highest severity for metric card
-  const flags = api.safety_flags || [];
-  const topSev = flags.length > 0
-    ? flags.reduce((a,f) => {
-        const rank = {CRITICAL:4,HIGH:3,MAJOR:3,MODERATE:2,MINOR:1,LOW:1};
-        return (rank[f.severity]||0) > (rank[a]||0) ? f.severity : a;
-      }, flags[0].severity)
-    : 'NONE';
-
-  // CYP competition count
-  const cypKeys = Object.keys(api.cyp_competition || {});
-  const interactionCount = flags.length + cypKeys.length;
-
-  // Cardiac risk from recommendation
-  const safetyVerdict = (api.recommendation || {}).safety_verdict || 'UNKNOWN';
-
-  // Update metric cards dynamically
-  const metricGrid = document.querySelector('#s-results .metric-grid');
-  if (metricGrid) {
-    // Find the bottleneck compound (lowest bioavailability from profiles)
-    const profiles = api.compound_profiles || {};
-    let bottleneck = '—';
-    let bottleneckNote = '';
-    for (const [cname, prof] of Object.entries(profiles)) {
-      if (prof.bioavailability_pct !== null && prof.bioavailability_pct !== undefined) {
-        bottleneck = cname;
-        bottleneckNote = prof.bioavailability_pct + '% oral bioavail.';
-        break;
-      }
-    }
-    if (bottleneck === '—' && ingredients.length > 0) {
-      bottleneck = ingredients[0].name;
-      bottleneckNote = 'PK data pending';
-    }
-
-    metricGrid.innerHTML = `
-      <div class="metric-card">
-        <div class="m-label">Bottleneck</div>
-        <div class="m-val" style="font-size:16px;color:var(--gold)">${bottleneck}</div>
-        <div class="m-sub">${bottleneckNote}</div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Interactions</div>
-        <div class="m-val gold">${interactionCount}</div>
-        <div class="m-sub">found · top: ${topSev}</div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Safety Verdict</div>
-        <div class="m-val ${safetyVerdict==='ACCEPTABLE'?'green':safetyVerdict==='CAUTION'?'gold':'red'}">${safetyVerdict}</div>
-        <div class="m-sub">${flags.length} flags</div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Ingredients</div>
-        <div class="m-val" style="color:#fff">${api.compound_count || ingredients.length}</div>
-        <div class="m-sub">analysed</div>
-      </div>
-    `;
-  }
-
-  // PK Summary — from compound profiles
-  const pkRows = document.getElementById('pk-rows');
-  if (pkRows) {
-    const profiles = api.compound_profiles || {};
-    let pkHTML = '';
-    for (const [cname, prof] of Object.entries(profiles)) {
-      const ing = ingredients.find(i => i.name.toLowerCase() === cname.toLowerCase());
-      const dose = ing ? ing.dose + ' mg' : '—';
-      const tmax = prof.tmax_h ? prof.tmax_h.toFixed(2) + 'h' : '—';
-      const foral = prof.bioavailability_pct != null ? prof.bioavailability_pct + '%' : '—';
-      const foralColor = prof.bioavailability_pct == null ? 'var(--txt-muted)' :
-        prof.bioavailability_pct > 40 ? 'var(--green)' : prof.bioavailability_pct > 10 ? 'var(--gold)' : 'var(--red)';
-      pkHTML += `
-        <div class="pk-row">
-          <div><div class="pk-ing">${cname}</div><div class="pk-dose">${dose}</div></div>
-          <div class="pk-stats">
-            <div class="pk-stat"><div class="v accent">${tmax}</div><div class="l">Tmax</div></div>
-            <div class="pk-stat"><div class="v" style="color:${foralColor}">${foral}</div><div class="l">foral</div></div>
-          </div>
-        </div>
-      `;
-    }
-    pkRows.innerHTML = pkHTML || '<div style="color:var(--txt-muted);font-size:12px;padding:8px 0">PK profile data not yet available for these compounds. Compound profiles will populate as the backend knowledge base expands.</div>';
-  }
-
-  // Herb-Drug Interactions — from safety_flags + cyp_competition
-  const intSection = document.querySelector('#s-results .section-card.warn');
-  if (intSection) {
-    const allInteractions = [];
-    for (const flag of flags) {
-      allInteractions.push({
-        severity: flag.severity || 'MODERATE',
-        name: (flag.compounds || []).join(' + '),
-        note: flag.note || ''
-      });
-    }
-    for (const [cyp, data] of Object.entries(api.cyp_competition || {})) {
-      allInteractions.push({
-        severity: data.risk_level || 'MODERATE',
-        name: `${cyp}: ${(data.compounds || []).join(', ')}`,
-        note: data.note || ''
-      });
-    }
-
-    const badge = allInteractions.length > 0 ? topSev : 'NONE';
-    intSection.innerHTML = `
-      <div class="sc-header">
-        <div class="sc-title">Interaction & Safety Screen</div>
-        <div class="badge ${badge==='MAJOR'||badge==='HIGH'?'gold':badge==='CRITICAL'?'red':''}"> ${badge}</div>
-      </div>
-      <div style="font-size:12px;color:var(--txt-muted);margin-bottom:10px">
-        ${allInteractions.length} interactions found
-      </div>
-      ${allInteractions.slice(0,8).map(i => `
-        <div class="int-row">
-          <div class="int-sev ${i.severity==='MAJOR'||i.severity==='HIGH'?'gold':i.severity==='CRITICAL'?'red':'accent'}">${i.severity}</div>
-          <div class="int-name">${i.name}</div>
-          <div class="int-note">${i.note}</div>
-        </div>
-      `).join('')}
-      <div class="source-note">
-        Source: NaturaBridgeB Multi-Compound Analysis Engine — real-time CYP competition, transporter modulation,
-        shared target analysis, and safety flag screening via live VPS backend.
-      </div>
-    `;
-  }
-
-  // Cardiac safety — from shared targets
-  const cardSection = document.querySelector('#s-results .section-card.danger');
-  if (cardSection) {
-    const rec = api.recommendation || {};
-    const stacking = rec.pathway_stacking_strength || 'UNKNOWN';
-    const domains = (rec.primary_therapeutic_domains || []).slice(0,4);
-    cardSection.innerHTML = `
-      <div class="sc-header">
-        <div class="sc-title">Therapeutic Analysis</div>
-        <div class="badge ${stacking==='STRONG'?'green':stacking==='MODERATE'?'gold':'red'}">${stacking}</div>
-      </div>
-      <div style="font-size:12px;color:var(--txt-muted);margin-bottom:10px">
-        ${api.shared_target_count || 0} shared targets · ${api.pathway_stacking_count || 0} pathway stacking nodes
-      </div>
-      ${domains.map(d => `
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-          <div style="font-weight:600;font-size:13px">${d.domain}</div>
-          <div style="display:flex;gap:12px;font-size:12px;color:var(--txt-muted)">
-            <span>${d.target_count} targets</span>
-            <span>CCS: ${(d.avg_convergence || 0).toFixed(2)}</span>
-          </div>
-        </div>
-      `).join('')}
-      ${domains.length === 0 ? '<div style="color:var(--txt-muted);font-size:12px;padding:8px 0">No therapeutic domain data returned.</div>' : ''}
-      <div class="source-note" style="margin-top:10px">
-        Source: NaturaBridgeB Convergence Scoring System — real-time pathway stacking analysis.
-        ${rec.combination_rationale || ''}
-      </div>
-    `;
-  }
-
-  // Actionable insight — from recommendation
-  const insightBox = document.querySelector('#s-results .insight-box');
-  if (insightBox) {
-    const rec = api.recommendation || {};
-    const synSummary = rec.synergy_summary || {};
-    insightBox.innerHTML = `
-      <h4>Analysis Summary — NaturaBridgeB</h4>
-      <p>${rec.combination_rationale || 'Analysis complete.'}</p>
-      ${synSummary.known_pairs ? `<p style="margin-top:8px"><b>Synergy pairs:</b> ${synSummary.known_pairs} known, ${synSummary.validated} validated, ${synSummary.predicted} predicted</p>` : ''}
-      ${api.dosage_recommendations && api.dosage_recommendations.length > 0 ? `
-        <p style="margin-top:8px"><b>Dosage recommendations:</b></p>
-        <ul style="margin:4px 0 0 16px;font-size:12px;line-height:1.6">
-          ${api.dosage_recommendations.map(d => `<li><b>${d.name}:</b> ${d.suggested_dosage} — ${d.timing}</li>`).join('')}
-        </ul>
-      ` : ''}
-    `;
-  }
-}
-
-function addToHistory(name, ingCount, api) {
-  const topSev = (api.safety_flags || []).length > 0
-    ? api.safety_flags[0].severity : 'NONE';
-  const date = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  const listEl = document.getElementById('history-list');
-  const emptyMsg = listEl.querySelector('div[style*="text-align:center"]');
-  if (emptyMsg) emptyMsg.remove();
-  listEl.insertAdjacentHTML('afterbegin', `
-    <div class="hist-item">
+function renderHistory() {
+  const list = loadHistory().filter(h => h.owner === historyOwner());
+  document.getElementById('history-list').innerHTML = list.length ? list.map((h, i) => `
+    <div class="hist-item" onclick="openHistory(${i})" style="cursor:pointer">
       <div>
-        <div class="hist-name">${name}</div>
-        <div class="hist-meta">${ingCount} ingredients · ${topSev} interactions · ${date}</div>
+        <div class="hist-name">${esc(h.name)}</div>
+        <div class="hist-meta">${Number(h.ingCount)} ingredients · ${esc(h.topSev)} · ${esc(h.date)}</div>
       </div>
       <div class="hist-chevron">›</div>
-    </div>
-  `);
+    </div>`).join('') : `<div style="color:var(--txt-muted);font-size:13px;padding:20px 0;text-align:center">
+        No analyses on this device yet. Run a deep analysis to see it here.</div>`;
+}
+
+function addToHistory(name, ingCount, api, html) {
+  const topSev = (api.safety_flags || []).length > 0 ? String(api.safety_flags[0].severity) + ' flag' : 'no safety flags';
+  const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const list = loadHistory();
+  list.unshift({ name, ingCount, topSev, date, owner: historyOwner(), html });
+  while (list.length > 8) list.pop();
+  for (;;) {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); break; }
+    catch { if (list.length <= 1) break; list.pop(); }      // storage full: drop the oldest
+  }
+  renderHistory();
+}
+
+function openHistory(i) {
+  const h = loadHistory().filter(x => x.owner === historyOwner())[i];
+  if (!h) return;
+  document.getElementById('deep-report-content').innerHTML = h.html;
+  document.getElementById('deep-report-name').textContent = h.name;
+  document.querySelectorAll('.screen').forEach(sc => sc.classList.remove('active'));
+  document.getElementById('s-deep-report').classList.add('active');
+  document.getElementById('app-body').scrollTop = 0;
 }
 
 /* ── Seed empty ingredient slots ── */
@@ -2092,7 +1521,7 @@ async function doRegister() {
   try {
     const res  = await fetch(AUTH_API + '/hcp/register', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pw, full_name: name, clinic_name: company || null })
+      body: JSON.stringify({ email, password: pw, full_name: name, clinic_name: company || null, practitioner_type: 'supplement_business' })
     });
     const data = await res.json();
     if (!res.ok) { setLoginErr(data.detail || 'Registration failed.'); return; }
@@ -2123,8 +1552,6 @@ function doLogout() {
 }
 
 let _currentUser = null;
-let _usedCredits = 0;
-const _INITIAL_CREDITS = 5;
 
 function bootApp(user) {
   _currentUser = user;
@@ -2144,9 +1571,6 @@ function bootApp(user) {
     document.querySelector('.header-right').appendChild(btn);
   }
 
-  // Update credits
-  document.getElementById('hdr-credits').textContent = _INITIAL_CREDITS;
-
   // Populate profile screen with real user data
   const initial = (user.full_name || user.email || '?')[0].toUpperCase();
   document.getElementById('prof-avatar').textContent = initial;
@@ -2154,7 +1578,7 @@ function bootApp(user) {
   document.getElementById('prof-email').textContent = user.email || '—';
   document.getElementById('prof-email2').textContent = user.email || '—';
   document.getElementById('prof-company').textContent = user.clinic_name || '—';
-  document.getElementById('prof-role').textContent = (user.role || 'practitioner').replace(/^\w/, c => c.toUpperCase());
+  document.getElementById('prof-role').textContent = user.practitioner_type_label || (user.role === 'admin' ? 'Administrator' : 'Account');
   document.getElementById('prof-id').textContent = 'NB-' + String(user.id || 0).padStart(4, '0');
 
   // Show admin tab if admin
@@ -2164,12 +1588,13 @@ function bootApp(user) {
   } else {
     adminTab.style.display = 'none';
   }
+  renderHistory();
 }
 
 /* ── Admin: load practitioner list ──────────────────────── */
 async function loadAdminUsers() {
   const el = document.getElementById('admin-user-list');
-  el.innerHTML = '<div style="color:var(--txt-muted)">Loading practitioners...</div>';
+  el.innerHTML = '<div style="color:var(--txt-muted)">Loading accounts...</div>';
   try {
     const res = await fetch(AUTH_API + '/hcp/practitioners', { headers: authHeaders() });
     if (!res.ok) { el.innerHTML = '<div style="color:var(--red)">Access denied or error.</div>'; return; }
@@ -2184,13 +1609,13 @@ async function loadAdminUsers() {
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-weight:700;color:#fff;font-size:14px">${u.full_name || '—'}</div>
-            <div style="font-size:12px;color:var(--txt-muted);margin-top:2px">${u.email}</div>
+            <div style="font-weight:700;color:#fff;font-size:14px">${esc(u.full_name || '—')}</div>
+            <div style="font-size:12px;color:var(--txt-muted);margin-top:2px">${esc(u.email)}</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;
               ${u.role === 'admin' ? 'background:rgba(79,172,222,.15);color:var(--accent)' : 'background:rgba(46,204,113,.12);color:var(--green)'}">
-              ${(u.role || 'practitioner').toUpperCase()}
+              ${esc((u.role || 'account').toUpperCase())}
             </div>
             <div style="font-size:10px;color:var(--txt-muted);margin-top:4px">
               ${u.is_active ? '● Active' : '○ Inactive'}
@@ -2198,7 +1623,7 @@ async function loadAdminUsers() {
           </div>
         </div>
         <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--txt-muted)">
-          <span>Company: ${u.clinic_name || '—'}</span>
+          <span>Company: ${esc(u.clinic_name || '—')}</span>
           <span>Joined: ${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</span>
           <span>Last login: ${u.last_login ? new Date(u.last_login).toLocaleDateString() : 'Never'}</span>
         </div>
@@ -2259,13 +1684,6 @@ async function runAnalysis() {
     return;
   }
 
-  /* Credit check */
-  const credEl = document.getElementById('hdr-credits');
-  if (parseInt(credEl.textContent) <= 0) {
-    alert('No credits remaining. Upgrade your plan to continue.');
-    return;
-  }
-
   /* Configure overlay for deep analysis */
   ov.querySelector('.ov-title').textContent = 'Running Deep Analysis';
   ov.querySelector('.ov-sub').textContent   = 'Calling 15 simulation systems — this may take several minutes\u2026';
@@ -2280,7 +1698,8 @@ async function runAnalysis() {
     if (!stepElements[idx]) {
       const div = document.createElement('div');
       div.className = 'step';
-      div.innerHTML = '<div class="dot"></div>' + stepName;
+      div.innerHTML = '<div class="dot"></div>';
+    div.appendChild(document.createTextNode(stepName));
       stepsEl.appendChild(div);
       stepElements[idx] = div;
     }
@@ -2293,26 +1712,21 @@ async function runAnalysis() {
 
   try {
     const compoundNames = ingredients.map(i => i.name);
-    const results = await orchestrator.run(compoundNames, ingredients, _currentUser || {});
+    // A formulation has no individual subject; the signed-in account is not a patient profile.
+    const results = await orchestrator.run(compoundNames, ingredients, {});
 
     ov.classList.remove('show');
 
     /* Render full deep report */
-    const reportHTML = DeepReportRenderer.render(name, target, ingredients, results);
+    const readFirst = '<div style="background:rgba(79,172,222,.08);border:1px solid rgba(79,172,222,.35);border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.55;margin-bottom:16px">' +
+      '<b>How to read this report.</b> Interaction findings come from curated tables. Concentrations, percentages and scores are ' +
+      'model outputs: the engine\'s own validation places its absolute predictions outside the accepted 2-fold range, so use them to ' +
+      'compare formulations, not as predictions or as substantiation for a label claim. A section marked "not simulated" was left out rather than estimated.</div>';
+    const reportHTML = readFirst + DeepReportRenderer.render(name, target, ingredients, results);
     document.getElementById('deep-report-content').innerHTML = reportHTML;
     document.getElementById('deep-report-name').textContent  = name;
 
-    /* Deduct credit */
-    _usedCredits++;
-    const remaining = Math.max(0, _INITIAL_CREDITS - _usedCredits);
-    credEl.textContent = remaining;
-    const billingCredits = document.getElementById('billing-credits');
-    if (billingCredits) billingCredits.textContent = remaining;
-    const billingUsed = document.getElementById('billing-used');
-    if (billingUsed) billingUsed.textContent = _usedCredits + ' credits';
-
-    /* Add to history */
-    addToHistory(name, ingredients.length, results.multiCompound || {});
+    addToHistory(name, ingredients.length, results.multiCompound || {}, reportHTML);
 
     /* Show deep report screen */
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));

@@ -90,7 +90,8 @@ workflows:
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
         beta_groups:
-          - "Internal Testers"
+          - "tester int"
+          - "testers external"
 
 
   # ══════════════════════════════════════════════════════════════════
@@ -201,7 +202,8 @@ workflows:
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
         beta_groups:
-          - "Internal Testers"
+          - "tester int"
+          - "testers external"
 
 
   # ══════════════════════════════════════════════════════════════════
@@ -241,3 +243,66 @@ workflows:
         notify:
           success: true
           failure: true
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # WORKFLOW 4 — NaturaBridgeB Android → Google Play (internal track, draft)
+  # Started manually. Before the first run, create in Codemagic:
+  #   * Code signing identities > Android keystores: upload
+  #     05_Secrets/naturabridgeb-upload-keystore.jks with reference name
+  #     `naturabridgeb_upload` (alias `upload`).
+  #   * Environment group `google_play` with GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+  #     (JSON key of a Play Console service account with release permission).
+  # The Play Console app for com.naturabridge.business must exist first, and the very
+  # first bundle has to be uploaded by hand in Play Console.
+  # ══════════════════════════════════════════════════════════════════
+  naturabridgeb-android:
+    name: "NaturaBridgeB — Android → Google Play internal"
+    max_build_duration: 45
+    instance_type: linux_x2
+
+    environment:
+      android_signing:
+        - naturabridgeb_upload
+      groups:
+        - google_play
+      node: "22"
+      java: 21
+
+    scripts:
+
+      - name: Install Android wrapper dependencies
+        script: cd android-app && npm ci
+
+      - name: Sync web assets
+        script: cd android-app && npx cap sync android
+
+      - name: Write keystore.properties from the Codemagic keystore
+        script: |
+          cat > android-app/android/keystore.properties <<EOF
+          storeFile=$CM_KEYSTORE_PATH
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          keyPassword=$CM_KEY_PASSWORD
+          EOF
+
+      - name: Build signed bundle
+        script: |
+          cd android-app/android
+          chmod +x gradlew
+          ./gradlew bundleRelease -PversionCodeOverride=$PROJECT_BUILD_NUMBER
+
+    artifacts:
+      - android-app/android/app/build/outputs/bundle/release/*.aab
+
+    publishing:
+      email:
+        recipients:
+          - admin@alphainception.com
+        notify:
+          success: true
+          failure: true
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true

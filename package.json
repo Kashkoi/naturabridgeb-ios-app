@@ -1,7 +1,7 @@
 {
   "name": "naturabridgeb-app",
-  "version": "1.0.0",
-  "description": "NaturaBridgeB â€” Business Edition Â· iPhone, iPad & Mac (Capacitor + Mac Catalyst)",
+  "version": "1.1.0",
+  "description": "NaturaBridgeB — formulation intelligence for supplement businesses (iOS + iPad + Mac + Android + Windows)",
   "private": true,
   "scripts": {
     "sync": "cap sync ios",
@@ -9,7 +9,8 @@
     "build:ios": "cap sync ios && cap open ios",
     "build:mac": "cap sync ios && cap open ios",
     "electron": "electron .",
-    "build:win": "electron-builder --win --publish never"
+    "build:win": "electron-builder --win --publish never",
+    "check": "node build-config/check_www.js"
   },
   "dependencies": {
     "@capacitor/core": "^6.0.0",
@@ -21,8 +22,8 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
-    "electron": "^31.7.7",
-    "electron-builder": "^24.13.3"
+    "electron": "^44.5.1",
+    "electron-builder": "^26.0.0"
   },
   "main": "electron-main.js",
   "build": {
@@ -32,19 +33,41 @@
       "output": "dist-electron"
     },
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "www/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "www/icon.ico",
-      "shortcutName": "NaturaBridgeB"
+      "shortcutName": "NaturaBridgeB",
+      "artifactName": "NaturaBridgeB-Setup-${version}.${ext}"
     },
     "files": [
       "www/**/*",
       "electron-main.js",
       "package.json"
-    ]
+    ],
+    "copyright": "Copyright © 2026 Alpha Inception LLC",
+    "portable": {
+      "artifactName": "NaturaBridgeB-${version}-portable.${ext}"
+    }
+  },
+  "author": {
+    "name": "Alpha Inception LLC",
+    "email": "andre@alphainception.com"
   }
 }
