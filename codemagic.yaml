@@ -23,6 +23,12 @@ workflows:
       vars:
         BUNDLE_ID:     "com.naturabridge.business"
         APPLE_TEAM_ID: "V44J4P68PU"
+        # The version shown in TestFlight and the App Store. It stays on the version
+        # Apple has already reviewed for TestFlight: builds of a reviewed version go
+        # to external testers without a new beta review, and a new version waits for
+        # one (about a day). Raise it when a new review is acceptable; package.json
+        # carries the product version (1.1.0) used on Windows and Android.
+        IOS_MARKETING_VERSION: "1.0"
       node: "20"
       xcode: latest
       cocoapods: "1.15.2"
@@ -71,7 +77,7 @@ workflows:
 
       - name: Set version and build number
         script: |
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="${IOS_MARKETING_VERSION:-$(node -p "require('./package.json').version")}"
           sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION;/g" ios/App/App.xcodeproj/project.pbxproj
           PLIST=ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST" 2>/dev/null || \
