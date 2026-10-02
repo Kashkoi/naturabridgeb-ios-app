@@ -17,9 +17,6 @@ workflows:
           source: true
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.naturabridge.business
       groups:
         - app-store-connect
         - ios-signing
@@ -45,36 +42,46 @@ workflows:
           cd ios/App
           pod install --repo-update
 
-      - name: Set build number
+      - name: Set up keychain
+        script: keychain initialize
+
+      # One distribution certificate is shared by the three NaturaBridge apps:
+      # CERTIFICATE_PRIVATE_KEY (group ios-signing) holds the same key in each
+      # Codemagic app, so this step finds the existing certificate instead of
+      # creating another one. Apple allows three per account; separate keys per
+      # app is what exhausted them in June and again in September 2026.
+      - name: Fetch signing files
         script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create \
+            --strict-match-identifier \
+            --key-id "$APP_STORE_CONNECT_KEY_ID"
+
+      - name: Add certificates to keychain
+        script: keychain add-certificates
+
+      - name: Set up code signing
+        script: xcode-project use-profiles --project ios/App/App.xcodeproj
+
+      - name: Set version and build number
+        script: |
+          VERSION="$(node -p "require('./package.json').version")"
+          sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION;/g" ios/App/App.xcodeproj/project.pbxproj
+          PLIST=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
           cd ios/App
           agvtool new-version -all $PROJECT_BUILD_NUMBER
 
-      - name: Build iOS archive
+      - name: Build IPA
         script: |
-          xcodebuild \
-            -workspace ios/App/App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath "$CM_BUILD_DIR/build/NaturaBridgeB-iOS.xcarchive" \
-            -destination "generic/platform=iOS" \
-            OTHER_CODE_SIGN_FLAGS="--keychain $(echo $CM_KEYCHAIN_PATH)" \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_SPECIFIER" \
-            CODE_SIGN_IDENTITY="$CODE_SIGNING_IDENTITY" \
-            archive | xcpretty
-
-      - name: Export IPA
-        script: |
-          xcodebuild -exportArchive \
-            -archivePath "$CM_BUILD_DIR/build/NaturaBridgeB-iOS.xcarchive" \
-            -exportOptionsPlist build-config/ExportOptions-iOS.plist \
-            -exportPath "$CM_BUILD_DIR/build/ipa-ios"
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App
 
     artifacts:
-      - $CM_BUILD_DIR/build/ipa-ios/*.ipa
-      - $CM_BUILD_DIR/build/NaturaBridgeB-iOS.xcarchive
+      - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
