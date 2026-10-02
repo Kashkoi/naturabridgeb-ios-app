@@ -96,8 +96,10 @@ workflows:
         key_id: $APP_STORE_CONNECT_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
+        # External groups only. The internal group ("tester int") receives every
+        # build automatically; naming it here makes Apple reject the request and
+        # the beta-review submission is then skipped.
         beta_groups:
-          - "tester int"
           - "testers external"
 
 
@@ -208,8 +210,10 @@ workflows:
         key_id: $APP_STORE_CONNECT_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
+        # External groups only. The internal group ("tester int") receives every
+        # build automatically; naming it here makes Apple reject the request and
+        # the beta-review submission is then skipped.
         beta_groups:
-          - "tester int"
           - "testers external"
 
 
