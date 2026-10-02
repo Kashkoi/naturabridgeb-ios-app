@@ -37,6 +37,11 @@ workflows:
           npx cap add ios
           npx cap sync ios
 
+      # App icon, launch image and the iOS 15 minimum. The project is generated fresh
+      # on every build, so without this step it ships the template's defaults.
+      - name: Brand the iOS project
+        script: bash build-config/ios_brand.sh
+
       - name: Install CocoaPods
         script: |
           cd ios/App
