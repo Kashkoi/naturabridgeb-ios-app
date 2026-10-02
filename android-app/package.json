@@ -1,6 +1,6 @@
 {
   "name": "naturabridgeb-android",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Android wrapper for NaturaBridgeB. Serves ../www through Capacitor 8 (target SDK 36). Kept separate from the root package so the iOS pipeline (Capacitor 6) is untouched.",
   "private": true,
   "scripts": {

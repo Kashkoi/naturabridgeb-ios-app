@@ -16,7 +16,7 @@ BRAND = os.path.join(ROOT, "build-config", "brand")      # written by build-conf
 with open(os.path.join(BRAND, "brand.json"), encoding="utf-8") as _f:
     COLOURS = json.load(_f)
 BG = tuple(int(COLOURS["app_background"][i:i + 2], 16) for i in (1, 3, 5)) + (255,)
-VERSION_NAME = "1.1.0"
+VERSION_NAME = "1.0.0"
 VERSION_CODE = 1
 
 GRADLE_HEADER = """// CI passes -PversionCodeOverride=<build number>; local builds use the default.

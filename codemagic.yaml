@@ -27,7 +27,7 @@ workflows:
         # Apple has already reviewed for TestFlight: builds of a reviewed version go
         # to external testers without a new beta review, and a new version waits for
         # one (about a day). Raise it when a new review is acceptable; package.json
-        # carries the product version (1.1.0) used on Windows and Android.
+        # carries the version used on Windows and Android (1.0.0).
         IOS_MARKETING_VERSION: "1.0"
       node: "20"
       xcode: latest
